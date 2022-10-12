@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(capture)
+project(Monitor)
 set(CMAKE_CXX_STANDARD 14)
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE} version")
@@ -9,32 +9,27 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE} version")
 SET(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 SET(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/output)
 
+message("get DOWNLOAD_THIRDPARTY ${DOWNLOAD_THIRDPARTY}")
 if(DOWNLOAD_THIRDPARTY)
     add_subdirectory(deps)
-endif()
+else(DOWNLOAD_THIRDPARTY)
+    # 设置cmake module path路径便于find_package
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-# 设置cmake module path路径便于find_package
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+    # 链接interface 便于开发
+    INCLUDE(cmake/utils/intf.cmake)
+    INCLUDE(cmake/utils/gtest.cmake)
+    INCLUDE(cmake/utils/spdlog.cmake)
 
-# 链接interface 便于开发
-INCLUDE(cmake/utils/intf.cmake)
-INCLUDE(cmake/utils/gtest.cmake)
-INCLUDE(cmake/utils/spdlog.cmake)
-INCLUDE(cmake/utils/pcap.cmake)
+    set(MONITOR_MAJOR_VERSION 0)
+    set(MONITOR_MINOR_VERSION 0)
+    set(MONITOR_PATCH_VERSION 1)
+    set(MONITOR_VERSION
+        ${MONITOR_MAJOR_VERSION}.${MONITOR_MINOR_VERSION}.${MONITOR_PATCH_VERSION})
+    set(MONITOR_VERSION_STRING "${MONITOR_VERSION}")
 
-set(CAPTURE_MAJOR_VERSION 0)
-set(CAPTURE_MINOR_VERSION 0)
-set(CAPTURE_PATCH_VERSION 1)
-set(CAPTURE_VERSION
-    ${CAPTURE_MAJOR_VERSION}.${CAPTURE_MINOR_VERSION}.${CAPTURE_PATCH_VERSION})
-set(CAPTURE_VERSION_STRING "${CAPTURE_VERSION}")
-
-
-add_subdirectory(src)
-add_subdirectory(examples)
-
-include(CTest)
-enable_testing()
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --verbose)
-message(STATUS "test")
-add_subdirectory(test)
+    include(CTest)
+    enable_testing()
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --verbose)
+    message(STATUS "test")
+endif(DOWNLOAD_THIRDPARTY)
