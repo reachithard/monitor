@@ -1,0 +1,6 @@
+#ifndef _MONITOR_VERSION_H_
+#define _MONITOR_VERSION_H_
+
+#define MONITOR_VERSION "0.0.1"
+
+#endif  // _MONITOR_VERSION_H_

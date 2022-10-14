@@ -10,3 +10,9 @@ message("deps install ${CMAKE_INSTALL_PREFIX}")
 
 INCLUDE(cmake/gtest.cmake)
 INCLUDE(cmake/spdlog.cmake)
+INCLUDE(cmake/leveldb.cmake)
+INCLUDE(cmake/yyjson.cmake)
+INCLUDE(cmake/asio.cmake)
+INCLUDE(cmake/protobuf.cmake)
+
+# INCLUDE(cmake/grpc.cmake)

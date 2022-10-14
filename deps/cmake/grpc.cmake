@@ -1,0 +1,14 @@
+include(ExternalProject)
+SET(GRPC_CONFIGURE_COMMAND cd ${SRC_DIR}/grpc && git submodule update --init && mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} ..)
+SET(GRPC_BUILD_COMMAND cd ${SRC_DIR}/grpc/build && make)
+SET(GRPC_INSTALL_COMMAND cd ${SRC_DIR}/grpc/build && make install)
+
+ExternalProject_Add(grpc
+  INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
+  SOURCE_DIR  ${SRC_DIR}/grpc
+  # CONFIGURE_COMMAND ${CMAKE_COMMAND}
+  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/grpc
+  CONFIGURE_COMMAND ${GRPC_CONFIGURE_COMMAND}
+  BUILD_COMMAND ${GRPC_BUILD_COMMAND}
+  INSTALL_COMMAND ${GRPC_INSTALL_COMMAND}
+)

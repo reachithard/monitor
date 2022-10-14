@@ -1,0 +1,19 @@
+{
+    "process" : {
+        "name" : "collectd",
+        "cmdline" : "./collectd",
+        "configfile": "hello"
+    },
+
+    "process" : {
+        "name" : "profiling",
+        "cmdline" : "./profiling",
+        "configfile": "world"
+    },
+
+    "process" : {
+        "name" : "grpc",
+        "cmdline" : "./grpc",
+        "configfile": "grpc"
+    }
+}

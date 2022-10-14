@@ -1,0 +1,7 @@
+#ifndef _MONITOR_ERRORS_H_
+#define _MONITOR_ERRORS_H_
+
+#define MON_CONFIG_PARSE 1
+#define MON_CONFIG_FORMAT 2
+#define MON_CONFIG_TRANSLATE 3
+#endif  // _MONITOR_ERRORS_H_
