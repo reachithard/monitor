@@ -22,18 +22,21 @@ ADD_LIBRARY(intf INTERFACE)
 #)
 #
 # TARGET_LINK_LIBRARIES(intf INTERFACE
-#						$<$<CONFIG:DEBUG>:-staitc-libasan>
+#						$<$<CONFIG:DEBUG>:-static-libasan>
 #						$<$<BOOL:${ENABLE_COV}>:-lgcov>)
 
 TARGET_INCLUDE_DIRECTORIES(intf INTERFACE 
+								${BASE_DIR}
                                 ${BASE_DIR}/src
 								${BASE_DIR}/src/utils
-								${BASE_DIR}/src/config)
+								${BASE_DIR}/src/config
+								${BASE_DIR}/output/include)
 
 TARGET_COMPILE_OPTIONS(intf INTERFACE 
 						-Wall
 						$<$<CONFIG:RELEASE>:-O3>
 						$<$<CONFIG:DEBUG>:-O0 -g>
+						# $<$<CONFIG:DEBUG>:-fsanitize=address>
 )
 
 TARGET_COMPILE_DEFINITIONS(intf INTERFACE 

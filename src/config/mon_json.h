@@ -3,10 +3,10 @@
 
 #include <string>
 
-#include "mon_config.h"
+#include "export/mon_config.h"
 #include "yyjson.h"
 
-namespace Monintor {
+namespace Monitor {
 class MonJson {
  public:
   MonJson();
@@ -14,21 +14,24 @@ class MonJson {
 
   int32_t Decode(ConfigItem_t** item, uint32_t flag, const char* file);
 
-  int32_t Decode(ConfigItem_t** item, const char* buffer, uint64_t size);
+  int32_t Decode(ConfigItem_t** item, const char* buffer, uint64_t size,
+                 uint32_t flag);
 
   int32_t Encode(ConfigItem_t* item, const char* file);
 
-  int32_t Encode(ConfigItem_t** item, const char* buffer, uint64_t size);
+  int32_t Encode(ConfigItem_t* item, const char* buffer, uint64_t size);
 
   const std::string& GetError() const { return errorInfo; }
 
+  static int32_t FreeItem(ConfigItem_t* item);
+
  protected:
-  int32_t Parse(yyjson_val* obj);
+  int32_t Parse(ConfigItem_t** item, yyjson_val* obj, uint32_t& childCnt);
 
  private:
   yyjson_doc* doc;
   std::string errorInfo;
 };
-}  // namespace Monintor
+}  // namespace Monitor
 
 #endif  // _MON_JSON_H_

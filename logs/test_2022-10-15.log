@@ -1,0 +1,33 @@
+mon_json.cpp(203): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get obj:object
+mon_json.cpp(182): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get str:name string
+mon_json.cpp(182): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get str:cmdline string
+mon_json.cpp(182): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get str:configfile string
+mon_json.cpp(203): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get obj:object
+mon_json.cpp(182): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get str:name string
+mon_json.cpp(182): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get str:cmdline string
+mon_json.cpp(182): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get str:configfile string
+mon_json.cpp(203): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get obj:object
+mon_json.cpp(182): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get str:name string
+mon_json.cpp(182): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get str:cmdline string
+mon_json.cpp(182): [debug 10/15/22 11:24:45.588 117304 117304 Parse] get str:configfile string
+mon_json.cpp(204): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get obj:object
+mon_json.cpp(183): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get str:name string
+mon_json.cpp(183): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get str:cmdline string
+mon_json.cpp(183): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get str:configfile string
+mon_json.cpp(204): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get obj:object
+mon_json.cpp(183): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get str:name string
+mon_json.cpp(183): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get str:cmdline string
+mon_json.cpp(183): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get str:configfile string
+mon_json.cpp(204): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get obj:object
+mon_json.cpp(183): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get str:name string
+mon_json.cpp(183): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get str:cmdline string
+mon_json.cpp(183): [debug 10/15/22 11:34:01.744 119594 119594 Parse] get str:configfile string
+mon_json.cpp(256): [debug 10/15/22 11:34:47.363 119594 119594 FreeItem] key:name string value:collectd
+mon_json.cpp(256): [debug 10/15/22 11:35:00.099 119594 119594 FreeItem] key:cmdline string value:./collectd
+mon_json.cpp(256): [debug 10/15/22 11:35:11.181 119594 119594 FreeItem] key:configfile string value:hello
+mon_json.cpp(256): [debug 10/15/22 11:35:28.577 119594 119594 FreeItem] key:name string value:profiling
+mon_json.cpp(256): [debug 10/15/22 11:35:37.008 119594 119594 FreeItem] key:cmdline string value:./profiling
+mon_json.cpp(256): [debug 10/15/22 11:35:53.035 119594 119594 FreeItem] key:configfile string value:world
+mon_json.cpp(256): [debug 10/15/22 11:36:00.402 119594 119594 FreeItem] key:name string value:grpc
+mon_json.cpp(256): [debug 10/15/22 11:36:00.402 119594 119594 FreeItem] key:cmdline string value:./grpc
+mon_json.cpp(256): [debug 10/15/22 11:36:00.402 119594 119594 FreeItem] key:configfile string value:grpc

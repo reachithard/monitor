@@ -9,3 +9,8 @@ target_sources(mon_config PRIVATE
 )
 target_link_libraries(mon_config PRIVATE intf)
 yyjson_deps(mon_config)
+
+add_library(mem_core ./core/mon_process.cpp)
+target_sources(mem_core PRIVATE 
+)
+target_link_libraries(mem_core PRIVATE intf)

@@ -9,26 +9,37 @@ extern "C" {
 #endif
 
 // CONFIG_NULL对应json的空类型
-enum ConfigValueType { CONFIG_STRING, CONFIG_NUMBER, CONFIG_BOOL, CONFIG_NULL };
+enum ConfigValueType {
+  CONFIG_DEFAULT,
+  CONFIG_STRING,
+  CONFIG_U64,
+  CONFIG_I64,
+  CONFIG_F64,
+  CONFIG_BOOL,
+  CONFIG_NULL
+};
 
-typedef struct MonConfigValue_s {
+typedef struct ConfigValue_s {
   union {
     /* data */
-    char *str;   // 对应json的字符串类型
-    double num;  // 对应json的数值类型
-    bool bo;     // 对应json的bool类型
+    char *str;  // 对应json的字符串类型
+    uint64_t u64;
+    int64_t i64;
+    double f64;
+    bool bo;  // 对应json的bool类型
   } value;
   ConfigValueType type;
-} MonConfigValue_t;
+} ConfigValue_t;
 
-typedef struct ConfigItem_s {
+typedef struct ConfigItem_s ConfigItem_t;
+struct ConfigItem_s {
   char *key;
-  MonConfigValue_t *values;
+  ConfigValue_t *values;
   uint32_t valuesCnt;
 
-  struct ConfigItem_s *children;
+  ConfigItem_t *children;
   uint32_t childCnt;
-} ConfigItem_t;
+};
 
 ConfigItem_t *ConfigParseFile(const char *file);
 
