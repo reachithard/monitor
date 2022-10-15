@@ -42,6 +42,6 @@ TEST(MonJsonTests, ParseFile) {
             0)
       << ptr->GetError();
   // TODO double free
-  // MonJson::FreeItem(item);
+  MonJson::FreeItem(item);
 }
 }  // namespace Monitor

@@ -37,7 +37,7 @@ int32_t MonJson::Decode(ConfigItem_t** item, uint32_t flag, const char* file) {
     }
 
     ConfigItem_t* root = (ConfigItem_t*)malloc(sizeof(ConfigItem_t));
-    memset(item, 0, sizeof(ConfigItem_t));
+    memset(root, 0, sizeof(ConfigItem_t));
     int32_t ret = Parse(&root->children, obj, root->childCnt);
     if (ret != 0) {
       // 这里直接清空 内存回收
@@ -142,7 +142,8 @@ int32_t MonJson::Parse(ConfigItem_t** item, yyjson_val* obj,
             /* code */
             temp.key = strdup(yyjson_get_str(key));
             temp.valuesCnt = 1;
-            temp.values = (ConfigValue_t*)malloc(temp.valuesCnt);
+            temp.values =
+                (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
             temp.values[0].type = CONFIG_U64;
             temp.values[0].value.u64 = yyjson_get_uint(val);
             break;
@@ -151,7 +152,8 @@ int32_t MonJson::Parse(ConfigItem_t** item, yyjson_val* obj,
             /* code */
             temp.key = strdup(yyjson_get_str(key));
             temp.valuesCnt = 1;
-            temp.values = (ConfigValue_t*)malloc(temp.valuesCnt);
+            temp.values =
+                (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
             temp.values[0].type = CONFIG_I64;
             temp.values[0].value.i64 = yyjson_get_int(val);
             break;
@@ -160,7 +162,8 @@ int32_t MonJson::Parse(ConfigItem_t** item, yyjson_val* obj,
             /* code */
             temp.key = strdup(yyjson_get_str(key));
             temp.valuesCnt = 1;
-            temp.values = (ConfigValue_t*)malloc(temp.valuesCnt);
+            temp.values =
+                (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
             temp.values[0].type = CONFIG_I64;
             temp.values[0].value.f64 = yyjson_get_real(val);
             break;
@@ -168,7 +171,8 @@ int32_t MonJson::Parse(ConfigItem_t** item, yyjson_val* obj,
           default: {
             temp.key = strdup(yyjson_get_str(key));
             temp.valuesCnt = 1;
-            temp.values = (ConfigValue_t*)malloc(temp.valuesCnt);
+            temp.values =
+                (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
             temp.values[0].type = CONFIG_NULL;
             temp.values[0].value.str = strdup("null");
             break;
@@ -183,7 +187,8 @@ int32_t MonJson::Parse(ConfigItem_t** item, yyjson_val* obj,
                   yyjson_get_type_desc(val));
         temp.key = strdup(yyjson_get_str(key));
         temp.valuesCnt = 1;
-        temp.values = (ConfigValue_t*)malloc(temp.valuesCnt);
+        temp.values =
+            (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
         temp.values[0].type = CONFIG_STRING;
         temp.values[0].value.str = strdup(yyjson_get_str(val));
         break;
@@ -238,6 +243,16 @@ int32_t MonJson::Parse(ConfigItem_t** item, yyjson_val* obj,
 }
 
 int32_t MonJson::FreeItem(ConfigItem_t* item) {
+  if (item == nullptr) {
+    return MON_CONFIG_PARAM;
+  }
+  int32_t ret = 0;
+  ret = MonJson::FreeItemImpl(item);
+  free(item);
+  return 0;
+}
+
+int32_t MonJson::FreeItemImpl(ConfigItem_t* item) {
   if (item == nullptr) {
     return MON_CONFIG_PARAM;
   }
@@ -311,18 +326,14 @@ int32_t MonJson::FreeItem(ConfigItem_t* item) {
   }
 
   for (uint32_t idx = 0; idx < item->childCnt; idx++) {
-    FreeItem(&item->children[idx]);
+    FreeItemImpl(&item->children[idx]);
   }
 
   if (item->children) {
     free(item->children);
+    item->children = nullptr;
     item->childCnt = 0;
   }
-
-  // if (item) {
-  //   free(item);
-  //   item = nullptr;
-  // }
 
   return 0;
 }

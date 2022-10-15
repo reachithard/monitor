@@ -28,6 +28,8 @@ class MonJson {
  protected:
   int32_t Parse(ConfigItem_t** item, yyjson_val* obj, uint32_t& childCnt);
 
+  static int32_t FreeItemImpl(ConfigItem_t* item);
+
  private:
   yyjson_doc* doc;
   std::string errorInfo;

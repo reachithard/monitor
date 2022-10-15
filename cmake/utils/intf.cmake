@@ -36,7 +36,6 @@ TARGET_COMPILE_OPTIONS(intf INTERFACE
 						-Wall
 						$<$<CONFIG:RELEASE>:-O3>
 						$<$<CONFIG:DEBUG>:-O0 -g>
-						# $<$<CONFIG:DEBUG>:-fsanitize=address>
 )
 
 TARGET_COMPILE_DEFINITIONS(intf INTERFACE 

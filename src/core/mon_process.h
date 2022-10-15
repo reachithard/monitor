@@ -17,6 +17,12 @@ class MonProcess {
  protected:
   int32_t Parse(const ConfigItem_t* config);
 
+  int32_t ParseCommonConfig(const ConfigItem_t* config);
+
+  int32_t ParseComplexConfig(const ConfigItem_t* config);
+
+  int32_t ParseProcessConfig(const ConfigItem_t* config);
+
  private:
   asio::io_context context;
 };
