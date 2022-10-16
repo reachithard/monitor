@@ -7,4 +7,5 @@
 #define MON_CONFIG_TRANSLATE 3
 
 #define MON_CORE_PARAM 11
+#define MON_CORE_CONF 12
 #endif  // _MONITOR_ERRORS_H_

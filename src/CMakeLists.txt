@@ -12,5 +12,12 @@ yyjson_deps(mon_config)
 
 add_library(mem_core ./core/mon_process.cpp)
 target_sources(mem_core PRIVATE 
+                    ./core/mon_cache.cpp
+                    ./core/mon_confile.cpp
+                    ./core/monitor_cxx.cpp
+                    ./core/mon_parse.cpp
+                    ./core/mon_plugin.cpp
+                    ./core/mon_process.cpp
+                    ./core/mon_timer.cpp
 )
 target_link_libraries(mem_core PRIVATE intf)

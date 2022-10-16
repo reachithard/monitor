@@ -246,6 +246,8 @@ int32_t MonJson::FreeItem(ConfigItem_t* item) {
   if (item == nullptr) {
     return MON_CONFIG_PARAM;
   }
+
+  // TODO 代码优化
   int32_t ret = 0;
   ret = MonJson::FreeItemImpl(item);
   free(item);

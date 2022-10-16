@@ -43,9 +43,11 @@ struct ConfigItem_s {
 
 ConfigItem_t *ConfigParseFile(const char *file);
 
-ConfigItem_t *ConfigParseBuffer(const char *file);
+ConfigItem_t *ConfigParseBuffer(const char *buffer, uint64_t size);
 
 void ConfigFree(ConfigItem_t *config);
+
+// TODO 更多的config的接口
 
 #ifdef __cplusplus
 }
