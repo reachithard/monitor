@@ -1,19 +1,49 @@
 {
-    "process" : {
-        "name" : "collectd",
-        "cmdline" : "./collectd",
-        "configfile": "hello"
+    "arr" : [false, -33, 24, 3.08, "hello world"],
+    "obj" : {
+        "bool" : false, 
+        "snum" : -33, 
+        "unum" : 24, 
+        "double" : 3.08, 
+        "str" : "hello world"
     },
-
-    "process" : {
-        "name" : "profiling",
-        "cmdline" : "./profiling",
-        "configfile": "world"
-    },
-
-    "process" : {
-        "name" : "grpc",
-        "cmdline" : "./grpc",
-        "configfile": "grpc"
-    }
+    "bool" : true,
+    "snum"  : -34,
+    "unum"  : 34,
+    "double" : 3.14,
+    "string" : "str",
+    "arrobj" : [
+        {
+            "bool" : false, 
+            "snum" : -33, 
+            "unum" : 24, 
+            "double" : 3.08, 
+            "arr" : [false, -33, 24, 3.08, "hello world"],
+            "str" : "hello world1"
+        },
+        {
+            "bool" : false, 
+            "snum" : -33, 
+            "unum" : 24, 
+            "double" : 3.08, 
+            "arr" : [false, -33, 24, 3.08, "hello world"],
+            "str" : "hello world2"
+        },
+        {
+            "bool" : false, 
+            "snum" : -33, 
+            "unum" : 24, 
+            "double" : 3.08, 
+            "arr" : [false, -33, 24, 3.08, "hello world"],
+            "str" : "hello world3"
+        },
+        {
+            "bool" : false, 
+            "snum" : -33, 
+            "unum" : 24, 
+            "double" : 3.08, 
+            "arr" : [false, -33, 24, 3.08, "hello world"],
+            "str" : "hello world4"
+        }
+    ]
 }

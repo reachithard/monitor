@@ -41,6 +41,7 @@ int32_t MonJson::Decode(ConfigItem_t** item, uint32_t flag, const char* file) {
     int32_t ret = Parse(&root->children, obj, root->childCnt);
     if (ret != 0) {
       // 这里直接清空 内存回收
+      MonJson::FreeItem(root);
       return ret;
     }
     *item = root;
@@ -80,6 +81,7 @@ int32_t MonJson::Decode(ConfigItem_t** item, const char* buffer, uint64_t size,
     int32_t ret = Parse(&root->children, obj, root->childCnt);
     if (ret != 0) {
       // 这里直接清空 内存回收
+      MonJson::FreeItem(root);
       return ret;
     }
     *item = root;
@@ -113,19 +115,25 @@ int32_t MonJson::Parse(ConfigItem_t** item, yyjson_val* obj,
     // #define YYJSON_TYPE_STR         ((uint8_t)5)        /* _____101 */
     // #define YYJSON_TYPE_ARR         ((uint8_t)6)        /* _____110 */
     // #define YYJSON_TYPE_OBJ         ((uint8_t)7)        /* _____111 */
-    ConfigItem_t temp;
-    memset(&temp, 0, sizeof(ConfigItem_t));
+
     val = yyjson_obj_iter_get_val(key);
+    if (val == nullptr) {
+      return MON_CONFIG_TRANSLATE;
+    }
     switch (yyjson_get_type(val)) {
       case YYJSON_TYPE_BOOL:
         /* code */
         LOG_DEBUG("get bool:{} {}", yyjson_get_bool(key),
                   yyjson_get_type_desc(val));
+        ConfigItem_t temp;
+        memset(&temp, 0, sizeof(ConfigItem_t));
         temp.key = strdup(yyjson_get_str(key));
         temp.valuesCnt = 1;
-        temp.values = (ConfigValue_t*)malloc(temp.valuesCnt);
+        temp.values =
+            (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigItem_t));
         temp.values[0].type = CONFIG_BOOL;
         temp.values[0].value.bo = yyjson_get_bool(val);
+        temps.push_back(temp);
         break;
       case YYJSON_TYPE_NUM: {
         /* code */
@@ -137,47 +145,35 @@ int32_t MonJson::Parse(ConfigItem_t** item, yyjson_val* obj,
         // #define YYJSON_SUBTYPE_UINT     ((uint8_t)(0 << 3)) /* ___00___ */
         // #define YYJSON_SUBTYPE_SINT     ((uint8_t)(1 << 3)) /* ___01___ */
         // #define YYJSON_SUBTYPE_REAL     ((uint8_t)(2 << 3)) /* ___10___ */
+        ConfigItem_t temp;
+        memset(&temp, 0, sizeof(ConfigItem_t));
+        temp.key = strdup(yyjson_get_str(key));
+        temp.valuesCnt = 1;
+        temp.values =
+            (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
         switch (yyjson_get_subtype(val)) {
           case YYJSON_SUBTYPE_UINT: {
-            /* code */
-            temp.key = strdup(yyjson_get_str(key));
-            temp.valuesCnt = 1;
-            temp.values =
-                (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
             temp.values[0].type = CONFIG_U64;
             temp.values[0].value.u64 = yyjson_get_uint(val);
             break;
           }
           case YYJSON_SUBTYPE_SINT: {
-            /* code */
-            temp.key = strdup(yyjson_get_str(key));
-            temp.valuesCnt = 1;
-            temp.values =
-                (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
             temp.values[0].type = CONFIG_I64;
             temp.values[0].value.i64 = yyjson_get_int(val);
             break;
           }
           case YYJSON_SUBTYPE_REAL: {
-            /* code */
-            temp.key = strdup(yyjson_get_str(key));
-            temp.valuesCnt = 1;
-            temp.values =
-                (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
             temp.values[0].type = CONFIG_I64;
             temp.values[0].value.f64 = yyjson_get_real(val);
             break;
           }
           default: {
-            temp.key = strdup(yyjson_get_str(key));
-            temp.valuesCnt = 1;
-            temp.values =
-                (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
             temp.values[0].type = CONFIG_NULL;
-            temp.values[0].value.str = strdup("null");
+            temp.values[0].value.str = strdup("none");
             break;
           }
         }
+        temps.push_back(temp);
         break;
       }
 
@@ -185,27 +181,118 @@ int32_t MonJson::Parse(ConfigItem_t** item, yyjson_val* obj,
         /* code */
         LOG_DEBUG("get str:{} {}", yyjson_get_str(key),
                   yyjson_get_type_desc(val));
+        ConfigItem_t temp;
+        memset(&temp, 0, sizeof(ConfigItem_t));
         temp.key = strdup(yyjson_get_str(key));
         temp.valuesCnt = 1;
         temp.values =
             (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
         temp.values[0].type = CONFIG_STRING;
         temp.values[0].value.str = strdup(yyjson_get_str(val));
+        temps.push_back(temp);
         break;
       }
 
       case YYJSON_TYPE_ARR: {
         /* code */
-        // 进行数组迭代
-        size_t idx, max;
-        yyjson_arr_foreach(key, idx, max, val) {
-          //   printf("hit%d: %d\n", (int)idx, (int)yyjson_get_int(hit));
-          // TODO 这里还得考虑嵌套数组的情况
+        // 需要先取一个 判断类型 因为基本类型和对象类型没放一起
+        yyjson_val* arr = yyjson_arr_get_first(val);
+
+        if (arr != nullptr) {
+          yyjson_type type = yyjson_get_type(arr);
+          yyjson_subtype subtype = yyjson_get_subtype(arr);
+          uint64_t idx = 0;
+          uint64_t max = 0;
+
+          temp.key = strdup(yyjson_get_str(key));
+          if (type != YYJSON_TYPE_OBJ) {
+            ConfigItem_t temp;
+            memset(&temp, 0, sizeof(ConfigItem_t));
+            temp.valuesCnt = yyjson_arr_size(val);
+            temp.values =
+                (ConfigValue_t*)malloc(temp.valuesCnt * sizeof(ConfigValue_t));
+            yyjson_arr_foreach(val, idx, max, obj) {
+              switch (yyjson_get_type(obj)) {
+                case YYJSON_TYPE_BOOL: {
+                  temp.values[idx].type = CONFIG_BOOL;
+                  temp.values[idx].value.bo = yyjson_get_bool(obj);
+                  break;
+                }
+                case YYJSON_TYPE_NUM: {
+                  switch (yyjson_get_subtype(obj)) {
+                    case YYJSON_SUBTYPE_UINT: {
+                      temp.values[idx].type = CONFIG_U64;
+                      temp.values[idx].value.u64 = yyjson_get_uint(obj);
+                      break;
+                    }
+                    case YYJSON_SUBTYPE_SINT: {
+                      temp.values[idx].type = CONFIG_I64;
+                      temp.values[idx].value.i64 = yyjson_get_int(obj);
+                      break;
+                    }
+                    case YYJSON_SUBTYPE_REAL: {
+                      temp.values[idx].type = CONFIG_I64;
+                      temp.values[idx].value.f64 = yyjson_get_real(obj);
+                      break;
+                    }
+                    default: {
+                      temp.values[idx].type = CONFIG_NULL;
+                      temp.values[idx].value.str = strdup("none");
+                      break;
+                    }
+                  }
+                  break;
+                }
+                case YYJSON_TYPE_STR: {
+                  temp.values[idx].type = CONFIG_STRING;
+                  temp.values[idx].value.str = strdup(yyjson_get_str(obj));
+                  break;
+                }
+                case YYJSON_TYPE_ARR: {
+                  LOG_DEBUG("not support this format, so sorry");
+                  return MON_CONFIG_TRANSLATE;
+                }
+                case YYJSON_TYPE_OBJ: {
+                  LOG_DEBUG("not support this format, so sorry");
+                  return MON_CONFIG_TRANSLATE;
+                }
+                default:
+                  temp.values[idx].type = CONFIG_NULL;
+                  temp.values[idx].value.str = strdup("null");
+                  break;
+              }
+            }
+            temps.push_back(temp);
+          } else {
+            ConfigItem_t temp;
+            memset(&temp, 0, sizeof(ConfigItem_t));
+            temp.valuesCnt = 0;
+            temp.childCnt = yyjson_arr_size(val);
+            temp.children =
+                (ConfigItem_t*)malloc(temp.childCnt * sizeof(ConfigItem_t));
+            yyjson_arr_foreach(val, idx, max, obj) {
+              LOG_DEBUG("get obj:{}", yyjson_get_type_desc(obj));
+              temp.key = strdup(yyjson_get_str(key));
+              temp.valuesCnt = 0;
+              if (Parse(&temp.children + idx, obj,
+                        (temp.children + idx)->childCnt) != 0) {
+                LOG_ERROR("change json to native error");
+                return MON_CONFIG_TRANSLATE;
+              }
+            }
+            temps.push_back(temp);
+          }
+        } else {
+          LOG_DEBUG("get a error form yyjson array");
+          return MON_CONFIG_TRANSLATE;
         }
+        temps.push_back(temp);
         break;
       }
       case YYJSON_TYPE_OBJ: {
         /* code */
+        ConfigItem_t temp;
+        memset(&temp, 0, sizeof(ConfigItem_t));
         LOG_DEBUG("get obj:{}", yyjson_get_type_desc(val));
         temp.key = strdup(yyjson_get_str(key));
         temp.valuesCnt = 0;
@@ -213,20 +300,23 @@ int32_t MonJson::Parse(ConfigItem_t** item, yyjson_val* obj,
           LOG_ERROR("change json to native error");
           return MON_CONFIG_TRANSLATE;
         }
+        temps.push_back(temp);
         break;
       }
       default: {
         LOG_DEBUG("get null:{} {}", yyjson_get_str(key),
                   yyjson_get_type_desc(val));
+        ConfigItem_t temp;
+        memset(&temp, 0, sizeof(ConfigItem_t));
         temp.key = strdup(yyjson_get_str(key));
         temp.valuesCnt = 1;
         temp.values = (ConfigValue_t*)malloc(temp.valuesCnt);
         temp.values[0].type = CONFIG_NULL;
         temp.values[0].value.str = strdup("null");
+        temps.push_back(temp);
         break;
       }
     }
-    temps.push_back(temp);
   }
 
   // 映射建立完毕 必须保证是pod类型 才能这样操作
@@ -259,7 +349,7 @@ int32_t MonJson::FreeItemImpl(ConfigItem_t* item) {
     return MON_CONFIG_PARAM;
   }
 
-  if (item->values) {
+  if (item && item->values) {
     switch (item->values->type) {
       case CONFIG_DEFAULT: {
         if (item->key) {

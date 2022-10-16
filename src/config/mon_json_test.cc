@@ -41,7 +41,6 @@ TEST(MonJsonTests, ParseFile) {
                         "/test/resources/mon_json_parsefile.json"),
             0)
       << ptr->GetError();
-  // TODO double free
   MonJson::FreeItem(item);
 }
 }  // namespace Monitor

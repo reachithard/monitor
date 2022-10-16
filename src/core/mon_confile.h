@@ -1,8 +1,10 @@
 #ifndef _MON_CONFILE_H_
 #define _MON_CONFILE_H_
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -19,12 +21,16 @@ class MonConfile : Singleton<MonConfile> {
   int32_t Init(const std::string& file);
 
  protected:
-  int32_t DispatchValue(const ConfigItem_t* conf);
+  int32_t DispatchConf(const ConfigItem_t* conf);
 
-  int32_t DispatchBlock(const ConfigItem_t* conf);
+  void InitConfMaps();
 
  private:
   ConfigItem_t* config = nullptr;
+  std::unordered_map<std::string,
+                     std::function<int32_t(const ConfigItem_t* conf)>>
+      confMaps;
+  std::once_flag mapFlag;
 };
 }  // namespace Monitor
 

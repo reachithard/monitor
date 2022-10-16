@@ -8,4 +8,5 @@
 
 #define MON_CORE_PARAM 11
 #define MON_CORE_CONF 12
+#define MON_CORE_UNSUPPORT 13
 #endif  // _MONITOR_ERRORS_H_
