@@ -16,7 +16,7 @@ TEST(MonJsonTests, ParseFileAbnormal_1) {
   ASSERT_EQ(ptr->Decode(nullptr, flg,
                         TEST_DEFAULT_RUN_DIR
                         "/test/resources/mon_json_parsefile.json"),
-            MON_CONFIG_PARAM)
+            ERR_CONFIG_PARAM)
       << ptr->GetError();
 }
 
@@ -26,7 +26,7 @@ TEST(MonJsonTests, ParseFileAbnormal_2) {
       YYJSON_READ_ALLOW_COMMENTS | YYJSON_READ_ALLOW_TRAILING_COMMAS;
   std::unique_ptr<MonJson> ptr = std::make_unique<MonJson>();
   ConfigItem_t* item = nullptr;
-  ASSERT_EQ(ptr->Decode(&item, flg, nullptr), MON_CONFIG_PARAM)
+  ASSERT_EQ(ptr->Decode(&item, flg, nullptr), ERR_CONFIG_PARAM)
       << ptr->GetError();
 }
 
@@ -41,6 +41,6 @@ TEST(MonJsonTests, ParseFile) {
                         "/test/resources/mon_json_parsefile.json"),
             0)
       << ptr->GetError();
-  MonJson::FreeItem(item);
+  // MonJson::FreeItem(item);
 }
 }  // namespace Monitor

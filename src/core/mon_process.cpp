@@ -11,7 +11,7 @@ MonProcess::~MonProcess() {}
 
 int32_t MonProcess::Init(const ConfigItem_t* config) {
   if (config == nullptr) {
-    return MON_CORE_PARAM;
+    return ERR_CORE_PARAM;
   }
 
   asio::signal_set signals(context, SIGINT, SIGTERM);
@@ -66,7 +66,7 @@ int32_t MonProcess::ParseCommonConfig(const ConfigItem_t* config) {
 int32_t MonProcess::ParseComplexConfig(const ConfigItem_t* config) {
   int32_t ret = 0;
   if (strcasecmp(config->key, "global") != 0) {
-    return MON_CORE_PARAM;
+    return ERR_CORE_PARAM;
   }
 
   for (uint32_t idx = 0; idx < config->childCnt; idx++) {

@@ -2,6 +2,7 @@
 #define _MON_JSON_H_
 
 #include <string>
+#include <vector>
 
 #include "export/mon_config.h"
 #include "yyjson.h"
@@ -23,12 +24,29 @@ class MonJson {
 
   const std::string& GetError() const { return errorInfo; }
 
-  static int32_t FreeItem(ConfigItem_t* item);
+  static void FreeJson(ConfigItem_t* item);
 
  protected:
-  int32_t Parse(ConfigItem_t** item, yyjson_val* obj, uint32_t& childCnt);
+  int32_t ParseJsonFile(uint32_t flag, const char* file);
 
-  static int32_t FreeItemImpl(ConfigItem_t* item);
+  int32_t ValidJsonFile();
+
+  int32_t TraverseJsonDom(ConfigItem_t* item, yyjson_val* cur);
+
+  int32_t TraverseJsonBool(yyjson_val* key, yyjson_val* value,
+                           std::vector<ConfigItem_t>& temps);
+
+  int32_t TraverseJsonNum(yyjson_val* key, yyjson_val* value,
+                          std::vector<ConfigItem_t>& temps);
+
+  int32_t TraverseJsonString(yyjson_val* key, yyjson_val* value,
+                             std::vector<ConfigItem_t>& temps);
+
+  int32_t TraverseJsonOther(yyjson_val* key, yyjson_val* value,
+                            std::vector<ConfigItem_t>& temps);
+
+  int32_t TraverseJsonArray(yyjson_val* key, yyjson_val* values,
+                            std::vector<ConfigItem_t>& temps);
 
  private:
   yyjson_doc* doc;

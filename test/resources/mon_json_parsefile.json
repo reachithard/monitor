@@ -1,24 +1,11 @@
 {
-    "arr" : [false, -33, 24, 3.08, "hello world"],
-    "obj" : {
-        "bool" : false, 
-        "snum" : -33, 
-        "unum" : 24, 
-        "double" : 3.08, 
-        "str" : "hello world"
-    },
-    "bool" : true,
-    "snum"  : -34,
-    "unum"  : 34,
-    "double" : 3.14,
-    "string" : "str",
     "arrobj" : [
         {
+            "arr" : [false, -33, 24, 3.08, "hello world"],
             "bool" : false, 
             "snum" : -33, 
             "unum" : 24, 
             "double" : 3.08, 
-            "arr" : [false, -33, 24, 3.08, "hello world"],
             "str" : "hello world1"
         },
         {
@@ -45,5 +32,18 @@
             "arr" : [false, -33, 24, 3.08, "hello world"],
             "str" : "hello world4"
         }
-    ]
+    ],
+    "arr" : [false, -33, 24, 3.08, "hello world"],
+    "obj" : {
+        "bool" : false, 
+        "snum" : -33, 
+        "unum" : 24, 
+        "double" : 3.08, 
+        "str" : "hello world"
+    },
+    "bool" : true,
+    "snum"  : -34,
+    "unum"  : 34,
+    "double" : 3.14,
+    "string" : "str"
 }

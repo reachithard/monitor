@@ -26,7 +26,7 @@ int32_t MonConfile::Init(const std::string& file) {
   config = ConfigParseFile(file.c_str());
   if (config == nullptr) {
     LOG_DEBUG("parse config error:{}", file);
-    return MON_CORE_PARAM;
+    return ERR_CORE_PARAM;
   }
 
   // 进行配置文件的解析 遍历两次 第一次加载key value 第二次加载block
@@ -39,7 +39,7 @@ int32_t MonConfile::Init(const std::string& file) {
       // 只要有一个配置有问题 就让程序跑不起来 将配置问题扼杀在启动阶段
       if (DispatchConf(cur) != 0) {
         LOG_DEBUG("get conf error:{}", cur->key);
-        ret = MON_CORE_CONF;
+        ret = ERR_CORE_CONF;
       }
     }
   }
@@ -51,7 +51,7 @@ int32_t MonConfile::Init(const std::string& file) {
       // 只要有一个配置有问题 就让程序跑不起来 将配置问题扼杀在启动阶段
       if (DispatchConf(cur) != 0) {
         LOG_DEBUG("get conf error:{}", cur->key);
-        ret = MON_CORE_CONF;
+        ret = ERR_CORE_CONF;
       }
     }
   }
@@ -66,18 +66,18 @@ int32_t MonConfile::DispatchConf(const ConfigItem_t* conf) {
   int32_t ret = 0;
   if (conf->key == nullptr) {
     LOG_DEBUG("get a error conf");
-    return MON_CORE_CONF;
+    return ERR_CORE_CONF;
   }
 
   auto it = confMaps.find(std::string(conf->key));
   if (it == confMaps.end()) {
-    return MON_CORE_CONF;
+    return ERR_CORE_CONF;
   }
   if (it->second != nullptr) {
     ret = it->second(conf);
   } else {
     LOG_DEBUG("unsupport conf");
-    return MON_CORE_UNSUPPORT;
+    return ERR_CORE_UNSUPPORT;
   }
   return ret;
 }
