@@ -46,14 +46,116 @@ int32_t MonJson::Decode(ConfigItem_t** item, uint32_t flag, const char* file) {
 }
 
 int32_t MonJson::Decode(ConfigItem_t** item, const char* buffer, uint64_t size,
-                        uint32_t flag) {}
+                        uint32_t flag) {
+  if (item == nullptr || buffer == nullptr) {
+    return ERR_CONFIG_PARAM;
+  }
+
+  int32_t ret = 0;
+  ret = ParseJsonFile(flag, buffer, size);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = ValidJsonFile();
+  if (ret != 0) {
+    return ret;
+  }
+
+  ConfigItem_t* config = (ConfigItem_t*)malloc(sizeof(ConfigItem_t));
+  memset(config, 0, sizeof(ConfigItem_t));
+  config->key = strdup("root");  // 第一个是root
+  yyjson_val* root = yyjson_doc_get_root(doc);
+  if (TraverseJsonDom(config, root) != 0) {
+    MonJson::FreeJson(config);
+    return ERR_CONFIG_TRANSLATE;
+  }
+  *item = config;
+  return ret;
+}
 
 int32_t MonJson::Encode(ConfigItem_t* item, const char* file) {}
 
 int32_t MonJson::Encode(ConfigItem_t* item, const char* buffer, uint64_t size) {
 }
 
-void MonJson::FreeJson(ConfigItem_t* item) {}
+void MonJson::FreeJsonNormal(ConfigItem_t* item) {
+  // key需要这边释放 因为block并不会去递归到具体节点
+  // 对于item进行判断 永远不可能出现既有object 又有value的数组
+  if (item == nullptr) {
+    return;
+  }
+  if (item->childCnt != 0 && item->valuesCnt != 0) {
+    LOG_ERROR("get a error format");
+    return;
+  }
+
+  if (item->key) {
+    LOG_DEBUG("free object:{}", item->key);
+    free(item->key);
+    item->key = nullptr;
+  }
+
+  if (item->valuesCnt != 0) {
+    // 说明是数组 如果是字符以及null类型 则需要进行内存释放 倒序遍历
+    for (uint32_t idx = 0; idx < item->valuesCnt; idx++) {
+      switch (item->values[idx].type) {
+        case CONFIG_STRING:
+          if (item->values[idx].value.str) {
+            free(item->values[idx].value.str);
+            item->values[idx].value.str = nullptr;
+          }
+          break;
+        case CONFIG_NULL:
+          if (item->values[idx].value.str) {
+            free(item->values[idx].value.str);
+            item->values[idx].value.str = nullptr;
+          }
+          break;
+        default:
+          break;
+      }
+    }
+    if (item->values) {
+      free(item->values);
+      item->values = nullptr;
+      item->valuesCnt = 0;
+    }
+  }
+
+  if (item->childCnt != 0) {
+    // 说明是数组 如果是字符以及null类型 则需要进行内存释放
+    for (uint32_t idx = 0; idx < item->childCnt; idx++) {
+      FreeJsonNormal(&item->children[idx]);
+    }
+  }
+}
+
+void MonJson::FreeJsonBlock(ConfigItem_t* item) {
+  if (item == nullptr) {
+    return;
+  }
+
+  if (item->childCnt != 0) {
+    uint32_t idx = 0;
+    for (; idx < item->childCnt; idx++) {
+      FreeJsonBlock(&item->children[idx]);
+    }
+
+    if (item->children != nullptr && idx == item->childCnt) {
+      LOG_DEBUG("free block");
+      printf("%p\n", item->children);
+      free(item->children);
+      item->childCnt = 0;
+    }
+  }
+}
+
+void MonJson::FreeJson(ConfigItem_t* item) {
+  FreeJsonNormal(item);
+  FreeJsonBlock(item);
+  free(item);
+}
 
 int32_t MonJson::ParseJsonFile(uint32_t flag, const char* file) {
   if (doc) {
@@ -78,6 +180,21 @@ int32_t MonJson::ValidJsonFile() {
   // 第一个必须为obj对象
   if (yyjson_get_type(obj) != YYJSON_TYPE_OBJ) {
     return ERR_CONFIG_FORMAT;
+  }
+  return 0;
+}
+
+int32_t MonJson::ParseJsonFile(uint32_t flag, const char* buffer,
+                               uint64_t size) {
+  if (doc) {
+    yyjson_doc_free(doc);
+    doc = nullptr;
+  }
+
+  yyjson_read_err err;
+  doc = yyjson_read(buffer, size, flag);
+  if (doc == nullptr) {
+    return ERR_CONFIG_READ;
   }
   return 0;
 }
@@ -144,16 +261,16 @@ int32_t MonJson::TraverseJsonDom(ConfigItem_t* item, yyjson_val* cur) {
         break;
       }
     }
-
-    if (!temps.empty()) {
-      ConfigItem_t* children =
-          (ConfigItem_t*)malloc(sizeof(ConfigItem_t) * temps.size());
-      memset(children, 0, sizeof(ConfigItem_t) * temps.size());
-      // pod类型这样玩
-      memcpy(children, temps.data(), sizeof(ConfigItem_t) * temps.size());
-      item->children = children;
-      item->childCnt = temps.size();
-    }
+  }
+  if (!temps.empty()) {
+    LOG_DEBUG("malloc size:{}", temps.size());
+    ConfigItem_t* children =
+        (ConfigItem_t*)malloc(sizeof(ConfigItem_t) * temps.size());
+    memset(children, 0, sizeof(ConfigItem_t) * temps.size());
+    // pod类型这样玩
+    memcpy(children, temps.data(), sizeof(ConfigItem_t) * temps.size());
+    item->children = children;
+    item->childCnt = temps.size();
   }
   return ret;
 }

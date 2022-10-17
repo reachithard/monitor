@@ -29,6 +29,8 @@ class MonJson {
  protected:
   int32_t ParseJsonFile(uint32_t flag, const char* file);
 
+  int32_t ParseJsonFile(uint32_t flag, const char* buffer, uint64_t size);
+
   int32_t ValidJsonFile();
 
   int32_t TraverseJsonDom(ConfigItem_t* item, yyjson_val* cur);
@@ -47,6 +49,10 @@ class MonJson {
 
   int32_t TraverseJsonArray(yyjson_val* key, yyjson_val* values,
                             std::vector<ConfigItem_t>& temps);
+
+  static void FreeJsonNormal(ConfigItem_t* item);
+
+  static void FreeJsonBlock(ConfigItem_t* item);
 
  private:
   yyjson_doc* doc;
