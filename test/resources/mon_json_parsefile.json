@@ -1,11 +1,11 @@
 {
     "arrobj" : [
         {
+            "double" : 3.08, 
             "arr" : [false, -33, 24, 3.08, "hello world"],
             "bool" : false, 
             "snum" : -33, 
             "unum" : 24, 
-            "double" : 3.08, 
             "str" : "hello world1"
         },
         {

@@ -54,7 +54,18 @@ class MonJson {
 
   static void FreeJsonBlock(ConfigItem_t* item);
 
-  int32_t WriteJsonDom(ConfigItem_t* cur, yyjson_mut_val* node);
+  int32_t WriteJsonDom(ConfigItem_t* cur, yyjson_mut_val* node, bool objArray);
+
+  int32_t WriteJsonRoot(ConfigItem_t* cur, yyjson_mut_val* node);
+
+  int32_t WriteJsonObject(ConfigItem_t* cur, yyjson_mut_val* node,
+                          bool objArray);
+
+  int32_t WriteJsonObjectArray(ConfigItem_t* cur, yyjson_mut_val* node);
+
+  int32_t WriteJsonArray(ConfigItem_t* cur, yyjson_mut_val* node);
+
+  int32_t WriteJsonValue(ConfigItem_t* cur, yyjson_mut_val* node);
 
  private:
   yyjson_doc* doc;

@@ -20,6 +20,8 @@ enum ConfigValueType {
 };
 
 enum ConfigItemType {
+  CONFIG_ROOT,  // 只有一个根 而且不应该被序列化进去
+  CONFIG_VALUE,
   CONFIG_OBJECT,
   CONFIG_OBJECT_ARRAY,  // 对象数组
   CONFIG_ARRAY          // 基本数组

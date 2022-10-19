@@ -41,6 +41,7 @@ int32_t MonJson::Decode(ConfigItem_t** item, uint32_t flag, const char* file) {
   ConfigItem_t* config = (ConfigItem_t*)malloc(sizeof(ConfigItem_t));
   memset(config, 0, sizeof(ConfigItem_t));
   config->key = strdup("root");  // 第一个是root
+  config->itemType = CONFIG_ROOT;
   yyjson_val* root = yyjson_doc_get_root(doc);
   if (TraverseJsonDom(config, root) != 0) {
     MonJson::FreeJson(config);
@@ -70,6 +71,7 @@ int32_t MonJson::Decode(ConfigItem_t** item, const char* buffer, uint64_t size,
   ConfigItem_t* config = (ConfigItem_t*)malloc(sizeof(ConfigItem_t));
   memset(config, 0, sizeof(ConfigItem_t));
   config->key = strdup("root");  // 第一个是root
+  config->itemType = CONFIG_ROOT;
   yyjson_val* root = yyjson_doc_get_root(doc);
   if (TraverseJsonDom(config, root) != 0) {
     MonJson::FreeJson(config);
@@ -93,7 +95,7 @@ int32_t MonJson::Encode(ConfigItem_t* item, const char* file) {
   yyjson_mut_val* root = yyjson_mut_obj(dom);
   yyjson_mut_doc_set_root(dom, root);
 
-  WriteJsonDom(item, root);
+  WriteJsonDom(item, root, false);
   // To string, minified
   yyjson_write_flag flg = YYJSON_WRITE_PRETTY | YYJSON_WRITE_ESCAPE_UNICODE;
   yyjson_write_err err;
@@ -119,12 +121,183 @@ int32_t MonJson::Encode(ConfigItem_t* item, const char* buffer, uint64_t size) {
   yyjson_mut_val* root = yyjson_mut_obj(dom);
   yyjson_mut_doc_set_root(dom, root);
 
-  WriteJsonDom(item, root);
+  WriteJsonDom(item, root, false);
   // To string, minified
   const char* json = yyjson_mut_write(dom, 0, NULL);
   if (json) {
     LOG_DEBUG("get json:{}", json);
     free((void*)json);
+  }
+  return 0;
+}
+
+int32_t MonJson::WriteJsonDom(ConfigItem_t* cur, yyjson_mut_val* node,
+                              bool objArray) {
+  int ret = 0;
+  if (cur == nullptr || node == nullptr) {
+    return ERR_CONFIG_PARAM;
+  }
+
+  switch (cur->itemType) {
+    case CONFIG_ROOT: {
+      /* code */
+      WriteJsonRoot(cur, node);
+      break;
+    }
+
+    case CONFIG_OBJECT: {
+      /* code */
+      WriteJsonObject(cur, node, objArray);
+      break;
+    }
+
+    case CONFIG_OBJECT_ARRAY: {
+      /* code */
+      WriteJsonObjectArray(cur, node);
+      break;
+    }
+
+    case CONFIG_ARRAY: {
+      /* code */
+      WriteJsonArray(cur, node);
+      break;
+    }
+
+    default: {
+      WriteJsonValue(cur, node);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+int32_t MonJson::WriteJsonRoot(ConfigItem_t* cur, yyjson_mut_val* node) {
+  // 基本类型
+  if (cur == nullptr || node == nullptr) {
+    return ERR_CONFIG_PARAM;
+  }
+
+  for (uint32_t idx = 0; idx < cur->childCnt; idx++) {
+    WriteJsonDom(&cur->children[idx], node, false);
+  }
+
+  return 0;
+}
+
+int32_t MonJson::WriteJsonObject(ConfigItem_t* cur, yyjson_mut_val* node,
+                                 bool objArray) {
+  // 基本类型
+  if (cur == nullptr || node == nullptr) {
+    return ERR_CONFIG_PARAM;
+  }
+
+  if (!objArray) {
+    yyjson_mut_val* obj = yyjson_mut_obj(dom);
+    yyjson_mut_obj_add_val(dom, node, cur->key, obj);
+    LOG_DEBUG("writejsonobject");
+    for (uint32_t idx = 0; idx < cur->childCnt; idx++) {
+      WriteJsonDom(&cur->children[idx], obj, false);
+    }
+  } else {
+    for (uint32_t idx = 0; idx < cur->childCnt; idx++) {
+      WriteJsonDom(&cur->children[idx], node, false);
+    }
+  }
+
+  return 0;
+}
+
+int32_t MonJson::WriteJsonObjectArray(ConfigItem_t* cur, yyjson_mut_val* node) {
+  // 基本类型
+  if (cur == nullptr || node == nullptr) {
+    return ERR_CONFIG_PARAM;
+  }
+
+  yyjson_mut_val* arr = yyjson_mut_arr(dom);
+  yyjson_mut_obj_add_val(dom, node, cur->key, arr);
+  LOG_DEBUG("WriteJsonObjectArray");
+  for (uint32_t idx = 0; idx < cur->childCnt; idx++) {
+    yyjson_mut_val* obj = yyjson_mut_obj(dom);
+    yyjson_mut_arr_insert(arr, obj, idx);
+    WriteJsonDom(&cur->children[idx], obj, true);
+  }
+
+  return 0;
+}
+
+int32_t MonJson::WriteJsonArray(ConfigItem_t* cur, yyjson_mut_val* node) {
+  if (cur == nullptr || node == nullptr) {
+    return ERR_CONFIG_PARAM;
+  }
+
+  yyjson_mut_val* arr = yyjson_mut_arr(dom);
+  yyjson_mut_obj_add_val(dom, node, cur->key, arr);
+  for (uint32_t idx = 0; idx < cur->valuesCnt; idx++) {
+    switch (cur->values[idx].type) {
+      case CONFIG_STRING: {
+        yyjson_mut_val* str = yyjson_mut_str(dom, cur->values[idx].value.str);
+        yyjson_mut_arr_insert(arr, str, idx);
+        break;
+      }
+      case CONFIG_U64: {
+        yyjson_mut_val* u64 = yyjson_mut_uint(dom, cur->values[idx].value.u64);
+        yyjson_mut_arr_insert(arr, u64, idx);
+        break;
+      }
+      case CONFIG_I64: {
+        yyjson_mut_val* i64 = yyjson_mut_int(dom, cur->values[idx].value.i64);
+        yyjson_mut_arr_insert(arr, i64, idx);
+        break;
+      }
+      case CONFIG_F64: {
+        yyjson_mut_val* f64 = yyjson_mut_real(dom, cur->values[idx].value.f64);
+        yyjson_mut_arr_insert(arr, f64, idx);
+        break;
+      }
+      case CONFIG_BOOL: {
+        yyjson_mut_val* bo = yyjson_mut_bool(dom, cur->values[idx].value.bo);
+        yyjson_mut_arr_insert(arr, bo, idx);
+        break;
+      }
+      default:
+        yyjson_mut_val* none = yyjson_mut_null(dom);
+        yyjson_mut_arr_insert(arr, none, idx);
+        break;
+    }
+  }
+  return 0;
+}
+
+int32_t MonJson::WriteJsonValue(ConfigItem_t* cur, yyjson_mut_val* node) {
+  if (cur == nullptr || node == nullptr) {
+    return ERR_CONFIG_PARAM;
+  }
+  // 基本类型
+  switch (cur->values[0].type) {
+    case CONFIG_STRING: {
+      yyjson_mut_obj_add_str(dom, node, cur->key, cur->values[0].value.str);
+      break;
+    }
+    case CONFIG_U64: {
+      yyjson_mut_obj_add_uint(dom, node, cur->key, cur->values[0].value.u64);
+      break;
+    }
+    case CONFIG_I64: {
+      yyjson_mut_obj_add_int(dom, node, cur->key, cur->values[0].value.i64);
+      break;
+    }
+    case CONFIG_F64: {
+      yyjson_mut_obj_add_real(dom, node, cur->key, cur->values[0].value.f64);
+      break;
+    }
+    case CONFIG_BOOL: {
+      yyjson_mut_obj_add_bool(dom, node, cur->key, cur->values[0].value.bo);
+      break;
+    }
+    default:
+      yyjson_mut_obj_add_null(dom, node, cur->key);
+      break;
   }
   return 0;
 }
@@ -458,6 +631,7 @@ int32_t MonJson::TraverseJsonBool(yyjson_val* key, yyjson_val* value,
   memset(&temp, 0, sizeof(ConfigItem_t));
   temp.key = strdup(yyjson_get_str(key));
   temp.valuesCnt = 1;
+  temp.itemType = CONFIG_VALUE;
   temp.values = (ConfigValue_t*)malloc(1 * sizeof(ConfigValue_t));
   temp.values[0].value.bo = yyjson_get_bool(value);
   temp.values[0].type = CONFIG_BOOL;
@@ -470,6 +644,7 @@ int32_t MonJson::TraverseJsonNum(yyjson_val* key, yyjson_val* value,
   memset(&temp, 0, sizeof(ConfigItem_t));
   temp.key = strdup(yyjson_get_str(key));
   temp.valuesCnt = 1;
+  temp.itemType = CONFIG_VALUE;
   temp.values = (ConfigValue_t*)malloc(1 * sizeof(ConfigValue_t));
   switch (yyjson_get_subtype(value)) {
     case YYJSON_SUBTYPE_UINT: {
@@ -483,7 +658,7 @@ int32_t MonJson::TraverseJsonNum(yyjson_val* key, yyjson_val* value,
       break;
     }
     case YYJSON_SUBTYPE_REAL: {
-      temp.values[0].type = CONFIG_I64;
+      temp.values[0].type = CONFIG_F64;
       temp.values[0].value.f64 = yyjson_get_real(value);
       break;
     }
@@ -504,6 +679,7 @@ int32_t MonJson::TraverseJsonString(yyjson_val* key, yyjson_val* value,
   memset(&temp, 0, sizeof(ConfigItem_t));
   temp.key = strdup(yyjson_get_str(key));
   temp.valuesCnt = 1;
+  temp.itemType = CONFIG_VALUE;
   temp.values = (ConfigValue_t*)malloc(1 * sizeof(ConfigValue_t));
   temp.values[0].value.str = strdup(yyjson_get_str(value));
   temp.values[0].type = CONFIG_STRING;
@@ -516,6 +692,7 @@ int32_t MonJson::TraverseJsonOther(yyjson_val* key, yyjson_val* value,
   memset(&temp, 0, sizeof(ConfigItem_t));
   temp.key = strdup(yyjson_get_str(key));
   temp.valuesCnt = 1;
+  temp.itemType = CONFIG_VALUE;
   temp.values = (ConfigValue_t*)malloc(1 * sizeof(ConfigValue_t));
   temp.values[0].value.str = strdup("none");
   temp.values[0].type = CONFIG_NULL;
@@ -558,7 +735,7 @@ int32_t MonJson::TraverseJsonArray(yyjson_val* key, yyjson_val* values,
             break;
           }
           case YYJSON_SUBTYPE_REAL: {
-            temp.values[idx].type = CONFIG_I64;
+            temp.values[idx].type = CONFIG_F64;
             temp.values[idx].value.f64 = yyjson_get_real(value);
             break;
           }
@@ -588,7 +765,7 @@ int32_t MonJson::TraverseJsonArray(yyjson_val* key, yyjson_val* values,
         ConfigItem_t objs;
         memset(&objs, 0, sizeof(ConfigItem_t));
         objs.key = strdup(yyjson_get_str(key));
-
+        objs.itemType = CONFIG_OBJECT;
         TraverseJsonDom(&objs, value);
         arrayObjs.push_back(objs);
         complex = true;
