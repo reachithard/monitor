@@ -8,12 +8,17 @@
 #include "utils/logger.hpp"
 
 namespace Monitor {
-MonJson::MonJson() : doc(nullptr) {}
+MonJson::MonJson() : doc(nullptr), dom(nullptr) {}
 
 MonJson::~MonJson() {
   if (doc) {
     yyjson_doc_free(doc);
     doc = nullptr;
+  }
+
+  if (dom) {
+    yyjson_mut_doc_free(dom);
+    dom = nullptr;
   }
 }
 
@@ -74,10 +79,198 @@ int32_t MonJson::Decode(ConfigItem_t** item, const char* buffer, uint64_t size,
   return ret;
 }
 
-int32_t MonJson::Encode(ConfigItem_t* item, const char* file) {}
+int32_t MonJson::Encode(ConfigItem_t* item, const char* file) {
+  if (item == nullptr || file == nullptr) {
+    return ERR_CONFIG_PARAM;
+  }
+
+  if (dom != nullptr) {
+    yyjson_mut_doc_free(dom);
+    dom = nullptr;
+  }
+
+  dom = yyjson_mut_doc_new(NULL);
+  yyjson_mut_val* root = yyjson_mut_obj(dom);
+  yyjson_mut_doc_set_root(dom, root);
+
+  WriteJsonDom(item, root);
+  // To string, minified
+  yyjson_write_flag flg = YYJSON_WRITE_PRETTY | YYJSON_WRITE_ESCAPE_UNICODE;
+  yyjson_write_err err;
+  yyjson_mut_write_file(file, dom, flg, NULL, &err);
+  if (err.code) {
+    LOG_ERROR("yyjson write error:{} msg:{}", err.code, err.msg);
+    return ERR_CONFIG_SERIAL;
+  }
+  return 0;
+}
 
 int32_t MonJson::Encode(ConfigItem_t* item, const char* buffer, uint64_t size) {
+  if (item == nullptr || buffer == nullptr) {
+    return ERR_CONFIG_PARAM;
+  }
+
+  if (dom != nullptr) {
+    yyjson_mut_doc_free(dom);
+    dom = nullptr;
+  }
+
+  dom = yyjson_mut_doc_new(NULL);
+  yyjson_mut_val* root = yyjson_mut_obj(dom);
+  yyjson_mut_doc_set_root(dom, root);
+
+  WriteJsonDom(item, root);
+  // To string, minified
+  const char* json = yyjson_mut_write(dom, 0, NULL);
+  if (json) {
+    LOG_DEBUG("get json:{}", json);
+    free((void*)json);
+  }
+  return 0;
 }
+
+// int32_t MonJson::WriteJsonDom(ConfigItem_t* cur, yyjson_mut_val* node) {
+//   if (cur == nullptr || node == nullptr) {
+//     return 0;
+//   }
+//   if (cur->childCnt != 0 && cur->valuesCnt != 0) {
+//     return ERR_CONFIG_FORMAT;
+//   }
+
+//   if (cur->childCnt != 0) {
+//     // 对象类型 但对象还是数组 要看一下
+//     bool value = false;
+//     bool block = false;
+//     for (uint32_t idx = 0; idx < cur->childCnt; idx++) {
+//       if (cur->children[idx].childCnt == 0) {
+//         value = true;
+//       } else {
+//         block = true;
+//       }
+//     }
+
+//     if (value && block) {
+//       // 普通类型 块类型混杂
+//       for (uint32_t idx = 0; idx < cur->childCnt; idx++) {
+//         if (cur->children[idx].childCnt == 0) {
+//           WriteJsonDom(&cur->children[idx], node);
+//         } else {
+//           yyjson_mut_val* arr = yyjson_mut_arr(dom);
+//           yyjson_mut_obj_add_val(dom, node, cur->children->key, arr);
+//           for (uint32_t childIdx = 0; childIdx < cur->children[idx].childCnt;
+//                childIdx++) {
+//             yyjson_mut_val* obj = yyjson_mut_obj(dom);
+//             yyjson_mut_arr_insert(arr, obj, childIdx);
+//             WriteJsonDom(&cur->children[idx].children[childIdx], obj);
+//           }
+//         }
+//       }
+//     } else if (value && !block) {
+//       // 只有普通类型
+//       yyjson_mut_val* obj = yyjson_mut_obj(dom);
+//       yyjson_mut_obj_add_val(dom, node, cur->key, obj);
+//       for (uint32_t idx = 0; idx < cur->childCnt; idx++) {
+//         WriteJsonDom(&cur->children[idx], obj);
+//       }
+//     } else {
+//       // 只有块类型
+//       yyjson_mut_val* arr = yyjson_mut_arr(dom);
+//       yyjson_mut_obj_add_val(dom, node, cur->key, arr);
+//       for (uint32_t idx = 0; idx < cur->childCnt; idx++) {
+//         yyjson_mut_val* obj = yyjson_mut_obj(dom);
+//         yyjson_mut_arr_insert(arr, obj, idx);
+//         WriteJsonDom(&cur->children[idx], obj);
+//       }
+//     }
+//   }
+
+//   if (cur->valuesCnt != 0) {
+//     // 数组或者基本类型
+//     if (cur->valuesCnt > 1) {
+//       // 数组类型
+//       // // CONFIG_NULL对应json的空类型
+//       // enum ConfigValueType {
+//       //   CONFIG_DEFAULT,
+//       //   CONFIG_STRING,
+//       //   CONFIG_U64,
+//       //   CONFIG_I64,
+//       //   CONFIG_F64,
+//       //   CONFIG_BOOL,
+//       //   CONFIG_NULL
+//       // };
+
+//       yyjson_mut_val* arr = yyjson_mut_arr(dom);
+//       yyjson_mut_obj_add_val(dom, node, cur->key, arr);
+//       for (uint32_t idx = 0; idx < cur->valuesCnt; idx++) {
+//         switch (cur->values[idx].type) {
+//           case CONFIG_STRING: {
+//             yyjson_mut_val* str =
+//                 yyjson_mut_str(dom, cur->values[idx].value.str);
+//             yyjson_mut_arr_insert(arr, str, idx);
+//             break;
+//           }
+//           case CONFIG_U64: {
+//             yyjson_mut_val* u64 =
+//                 yyjson_mut_uint(dom, cur->values[idx].value.u64);
+//             yyjson_mut_arr_insert(arr, u64, idx);
+//             break;
+//           }
+//           case CONFIG_I64: {
+//             yyjson_mut_val* i64 =
+//                 yyjson_mut_int(dom, cur->values[idx].value.i64);
+//             yyjson_mut_arr_insert(arr, i64, idx);
+//             break;
+//           }
+//           case CONFIG_F64: {
+//             yyjson_mut_val* f64 =
+//                 yyjson_mut_real(dom, cur->values[idx].value.f64);
+//             yyjson_mut_arr_insert(arr, f64, idx);
+//             break;
+//           }
+//           case CONFIG_BOOL: {
+//             yyjson_mut_val* bo =
+//                 yyjson_mut_bool(dom, cur->values[idx].value.bo);
+//             yyjson_mut_arr_insert(arr, bo, idx);
+//             break;
+//           }
+//           default:
+//             yyjson_mut_val* none = yyjson_mut_null(dom);
+//             yyjson_mut_arr_insert(arr, none, idx);
+//             break;
+//         }
+//       }
+//     } else {
+//       // 基本类型
+//       switch (cur->values[0].type) {
+//         case CONFIG_STRING: {
+//           yyjson_mut_obj_add_str(dom, node, cur->key,
+//           cur->values[0].value.str); break;
+//         }
+//         case CONFIG_U64: {
+//           yyjson_mut_obj_add_uint(dom, node, cur->key,
+//                                   cur->values[0].value.u64);
+//           break;
+//         }
+//         case CONFIG_I64: {
+//           yyjson_mut_obj_add_int(dom, node, cur->key,
+//           cur->values[0].value.i64); break;
+//         }
+//         case CONFIG_F64: {
+//           yyjson_mut_obj_add_real(dom, node, cur->key,
+//                                   cur->values[0].value.f64);
+//           break;
+//         }
+//         case CONFIG_BOOL: {
+//           yyjson_mut_obj_add_bool(dom, node, cur->key,
+//           cur->values[0].value.bo); break;
+//         }
+//         default:
+//           yyjson_mut_obj_add_null(dom, node, cur->key);
+//           break;
+//       }
+//     }
+//   }
+// }
 
 void MonJson::FreeJsonNormal(ConfigItem_t* item) {
   // key需要这边释放 因为block并不会去递归到具体节点
@@ -200,24 +393,6 @@ int32_t MonJson::ParseJsonFile(uint32_t flag, const char* buffer,
 }
 
 int32_t MonJson::TraverseJsonDom(ConfigItem_t* item, yyjson_val* cur) {
-  //   typedef uint8_t yyjson_type;
-  // #define YYJSON_TYPE_NONE        ((uint8_t)0)        /* _____000 */
-  // #define YYJSON_TYPE_RAW         ((uint8_t)1)        /* _____001 */
-  // #define YYJSON_TYPE_NULL        ((uint8_t)2)        /* _____010 */
-  // #define YYJSON_TYPE_BOOL        ((uint8_t)3)        /* _____011 */
-  // #define YYJSON_TYPE_NUM         ((uint8_t)4)        /* _____100 */
-  // #define YYJSON_TYPE_STR         ((uint8_t)5)        /* _____101 */
-  // #define YYJSON_TYPE_ARR         ((uint8_t)6)        /* _____110 */
-  // #define YYJSON_TYPE_OBJ         ((uint8_t)7)        /* _____111 */
-
-  // /** Subtype of JSON value (2 bit). */
-  // typedef uint8_t yyjson_subtype;
-  // #define YYJSON_SUBTYPE_NONE     ((uint8_t)(0 << 3)) /* ___00___ */
-  // #define YYJSON_SUBTYPE_FALSE    ((uint8_t)(0 << 3)) /* ___00___ */
-  // #define YYJSON_SUBTYPE_TRUE     ((uint8_t)(1 << 3)) /* ___01___ */
-  // #define YYJSON_SUBTYPE_UINT     ((uint8_t)(0 << 3)) /* ___00___ */
-  // #define YYJSON_SUBTYPE_SINT     ((uint8_t)(1 << 3)) /* ___01___ */
-  // #define YYJSON_SUBTYPE_REAL     ((uint8_t)(2 << 3)) /* ___10___ */
   int ret = 0;
   yyjson_obj_iter iter;
   yyjson_obj_iter_init(cur, &iter);
@@ -250,8 +425,8 @@ int32_t MonJson::TraverseJsonDom(ConfigItem_t* item, yyjson_val* cur) {
         LOG_DEBUG("get YYJSON_TYPE_OBJ:{} ", yyjson_get_str(key));
         ConfigItem_t temp;
         memset(&temp, 0, sizeof(ConfigItem_t));
+        temp.itemType = CONFIG_OBJECT;
         temp.key = strdup(yyjson_get_str(key));
-
         TraverseJsonDom(&temp, value);
         temps.push_back(temp);
         break;
@@ -361,7 +536,7 @@ int32_t MonJson::TraverseJsonArray(yyjson_val* key, yyjson_val* values,
   uint64_t max = 0;
   yyjson_val* value = nullptr;
   std::vector<ConfigItem_t> arrayObjs;
-  // TODO temp也要这样玩 防止各种类型
+  // temp也要这样玩 防止各种类型
   yyjson_arr_foreach(values, idx, max, value) {
     switch (yyjson_get_type(value)) {
       case YYJSON_TYPE_BOOL: {
@@ -408,7 +583,7 @@ int32_t MonJson::TraverseJsonArray(yyjson_val* key, yyjson_val* values,
         break;
       }
       case YYJSON_TYPE_OBJ: {
-        // TODO 这个是要支持的
+        // 这个是要支持的
         LOG_DEBUG("get array YYJSON_TYPE_OBJ:{} ", yyjson_get_str(key));
         ConfigItem_t objs;
         memset(&objs, 0, sizeof(ConfigItem_t));
@@ -436,6 +611,9 @@ int32_t MonJson::TraverseJsonArray(yyjson_val* key, yyjson_val* values,
     temp.valuesCnt = 0;
     free(temp.values);
     temp.values = nullptr;
+    temp.itemType = CONFIG_OBJECT_ARRAY;
+  } else {
+    temp.itemType = CONFIG_ARRAY;
   }
 
   if (!arrayObjs.empty()) {

@@ -1,0 +1,97 @@
+{
+    "arrobj": [
+        {
+            "arrobj": {
+                "arr": [
+                    false,
+                    -33,
+                    24,
+                    4614117962226167972,
+                    "hello world"
+                ],
+                "bool": false,
+                "snum": -33,
+                "unum": 24,
+                "double": 4614117962226167972,
+                "str": "hello world1"
+            }
+        },
+        {
+            "arrobj": {
+                "bool": false,
+                "snum": -33,
+                "unum": 24,
+                "double": 4614117962226167972,
+                "arr": [
+                    false,
+                    -33,
+                    24,
+                    4614117962226167972,
+                    "hello world"
+                ],
+                "str": "hello world2"
+            }
+        },
+        {
+            "arrobj": {
+                "bool": false,
+                "snum": -33,
+                "unum": 24,
+                "double": 4614117962226167972,
+                "arr": [
+                    false,
+                    -33,
+                    24,
+                    4614117962226167972,
+                    "hello world"
+                ],
+                "str": "hello world3"
+            }
+        },
+        {
+            "arrobj": {
+                "bool": false,
+                "snum": -33,
+                "unum": 24,
+                "double": 4614117962226167972,
+                "arr": [
+                    false,
+                    -33,
+                    24,
+                    4614117962226167972,
+                    "hello world"
+                ],
+                "str": "hello world4"
+            }
+        }
+    ],
+    "arr": [
+        false,
+        -33,
+        24,
+        4614117962226167972,
+        "hello world"
+    ],
+    "arrobj": [
+        {
+            "bool": false
+        },
+        {
+            "snum": -33
+        },
+        {
+            "unum": 24
+        },
+        {
+            "double": 4614117962226167972
+        },
+        {
+            "str": "hello world"
+        }
+    ],
+    "bool": true,
+    "snum": -34,
+    "unum": 34,
+    "double": 4614253070214989087,
+    "string": "str"
+}

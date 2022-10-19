@@ -19,10 +19,16 @@ enum ConfigValueType {
   CONFIG_NULL
 };
 
+enum ConfigItemType {
+  CONFIG_OBJECT,
+  CONFIG_OBJECT_ARRAY,  // 对象数组
+  CONFIG_ARRAY          // 基本数组
+};
+
 typedef struct ConfigValue_s {
   union {
     /* data */
-    char *str;  // 对应json的字符串类型
+    char* str;  // 对应json的字符串类型
     uint64_t u64;
     int64_t i64;
     double f64;
@@ -33,19 +39,20 @@ typedef struct ConfigValue_s {
 
 typedef struct ConfigItem_s ConfigItem_t;
 struct ConfigItem_s {
-  char *key;
-  ConfigValue_t *values;
+  char* key;
+  ConfigValue_t* values;
   uint32_t valuesCnt;
 
-  ConfigItem_t *children;
+  ConfigItem_t* children;
   uint32_t childCnt;
+  ConfigItemType itemType;
 };
 
-ConfigItem_t *ConfigParseFile(const char *file);
+ConfigItem_t* ConfigParseFile(const char* file);
 
-ConfigItem_t *ConfigParseBuffer(const char *buffer, uint64_t size);
+ConfigItem_t* ConfigParseBuffer(const char* buffer, uint64_t size);
 
-void ConfigFree(ConfigItem_t *config);
+void ConfigFree(ConfigItem_t* config);
 
 // TODO 更多的config的接口
 

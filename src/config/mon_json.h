@@ -54,8 +54,11 @@ class MonJson {
 
   static void FreeJsonBlock(ConfigItem_t* item);
 
+  int32_t WriteJsonDom(ConfigItem_t* cur, yyjson_mut_val* node);
+
  private:
   yyjson_doc* doc;
+  yyjson_mut_doc* dom;
   std::string errorInfo;
 };
 }  // namespace Monitor

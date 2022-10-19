@@ -43,4 +43,39 @@ TEST(MonJsonTests, ParseFile) {
       << ptr->GetError();
   MonJson::FreeJson(item);
 }
+
+TEST(MonJsonTests, EncodeJson) {
+  using namespace Monitor;
+  yyjson_read_flag flg =
+      YYJSON_READ_ALLOW_COMMENTS | YYJSON_READ_ALLOW_TRAILING_COMMAS;
+  std::unique_ptr<MonJson> ptr = std::make_unique<MonJson>();
+  ConfigItem_t* item = nullptr;
+  ASSERT_EQ(ptr->Decode(&item, flg,
+                        TEST_DEFAULT_RUN_DIR
+                        "/test/resources/mon_json_parsefile.json"),
+            0)
+      << ptr->GetError();
+  char buffer[4096] = {0};
+  ASSERT_EQ(ptr->Encode(item, buffer, 4096), 0) << ptr->GetError();
+  MonJson::FreeJson(item);
+}
+
+TEST(MonJsonTests, EncodeFile) {
+  using namespace Monitor;
+  yyjson_read_flag flg =
+      YYJSON_READ_ALLOW_COMMENTS | YYJSON_READ_ALLOW_TRAILING_COMMAS;
+  std::unique_ptr<MonJson> ptr = std::make_unique<MonJson>();
+  ConfigItem_t* item = nullptr;
+  ASSERT_EQ(ptr->Decode(&item, flg,
+                        TEST_DEFAULT_RUN_DIR
+                        "/test/resources/mon_json_parsefile.json"),
+            0)
+      << ptr->GetError();
+  char buffer[4096] = {0};
+  ASSERT_EQ(ptr->Encode(item, TEST_DEFAULT_RUN_DIR
+                        "/test/resources/mon_json_parsefile_output.json"),
+            0)
+      << ptr->GetError();
+  MonJson::FreeJson(item);
+}
 }  // namespace Monitor
