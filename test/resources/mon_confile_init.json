@@ -7,8 +7,12 @@
     "writeThreads" : 5,
     "timeout" : 5,
     "maxReadInterval" : 300,
-    "plugins" : [
-        [1, 2, 3],
-        [2, 4]
-    ]
+    "plugins" : {
+        "df" : {
+            "hello" : "world"
+        },
+        "process" : {
+            "mmp" : "http"
+        }
+    }
 }

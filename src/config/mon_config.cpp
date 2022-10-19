@@ -31,9 +31,4 @@ ConfigItem_t* ConfigParseBuffer(const char* buffer, uint32_t size) {
   return config;
 }
 
-void ConfigFree(ConfigItem_t* config) {
-  // int32_t ret = Monitor::MonJson::FreeItem(config);
-  // if (ret != 0) {
-  //   LOG_DEBUG("free config error, may be resource leak");
-  // }
-}
+void ConfigFree(ConfigItem_t* config) { Monitor::MonJson::FreeJson(config); }
