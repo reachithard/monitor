@@ -6,6 +6,10 @@
 #include "mon_module.h"
 #include "utils/logger.hpp"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void PluginLog(PlguinLogLevel level, const char* format, ...) {
   char msg[1024];
   va_list ap;
@@ -36,7 +40,11 @@ void PluginLog(PlguinLogLevel level, const char* format, ...) {
   }
 }
 
-// 插件主动调用这个接口 注册回调函数
+// 插件主动调用这个接口 注册回调函数 往MonModule里面注册进去 供他管理
 int32_t ModuleRegister(const PluginCallbacks_t* callback) {
   LOG_DEBUG("register a module");
 }
+
+#ifdef __cplusplus
+}
+#endif

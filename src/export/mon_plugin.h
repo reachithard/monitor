@@ -34,9 +34,6 @@ typedef struct PluginCallbacks_s {
 // 插件主动调用这个接口 注册回调函数
 int32_t ModuleRegister(const PluginCallbacks_t* callback);
 
-// 插件实现该接口 这里不用实现 调用ModuleRegister
-void PluginRegister();
-
 // TODO 一个线程接口
 
 // 写入数据接口

@@ -3,6 +3,7 @@
 #include "export/mon_config.h"
 #include "export/mon_config_utils.h"
 #include "export/monitor_errors.h"
+#include "mon_module.h"
 #include "utils/logger.hpp"
 
 namespace Monitor {
@@ -140,13 +141,22 @@ int32_t MonConfile::DispatchBaseConf(const ConfigItem_t* conf) {
 
 int32_t MonConfile::DispatchPluginConf(const ConfigItem_t* conf) {
   // 这里去加载动态库之类的
-  LOG_DEBUG("called DispatchPluginConf");
+  LOG_DEBUG("called DispatchPluginConf:{}", conf->key);
   assert(conf != nullptr);
-
-  for (uint32_t idx = 0; idx < config->childCnt; idx++) {
-    ConfigItem_t* cur = &config->children[idx];
+  int32_t ret = 0;
+  for (uint32_t idx = 0; idx < conf->childCnt; idx++) {
+    ConfigItem_t* cur = &conf->children[idx];
     // 通过名字去加载动态库 然后调用回调
+    assert(cur != nullptr && cur->key != nullptr);
+    if (Singleton<MonModule>::Get().LoadPlugin(
+            globalConf.pluginDir, std::string(cur->key), false) != 0) {
+      ret = ERR_MODULE_LOAD;
+      LOG_DEBUG("load plugin:{} failed", cur->key);
+    } else {
+      LOG_DEBUG("load plugin:{} success", cur->key);
+    }
   }
+  return ret;
 }
 
 void MonConfile::InitDispatchMaps() {

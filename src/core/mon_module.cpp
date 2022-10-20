@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "export/mon_plugin.h"
 #include "export/monitor_errors.h"
 #include "utils/logger.hpp"
 
@@ -85,9 +86,9 @@ int32_t MonModule::LoadFile(const std::string& filename, bool global) {
   }
 
   typedef void (*fptr)();
-  fptr handle = (fptr)dlsym(dl, "ModuleRegister");
+  fptr handle = (fptr)dlsym(dl, "PluginRegister");
   if (handle == nullptr) {
-    LOG_ERROR("could't find symbol ModuleRegister in {}", filename, dlerror());
+    LOG_ERROR("could't find symbol PluginRegister in {}", filename, dlerror());
     ret = ERR_MODULE_LOAD;
   } else {
     handle();

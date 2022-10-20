@@ -1,5 +1,5 @@
 {
-    "pluginDir" : "/root/workspace/monitor/output/lib",
+    "pluginDir" : "/root/workspace/monitor/build/src",
     "baseDir" : "/root/workspace/monitor/output",
     "pidFile" : "/root/workspace/monitor/output",
     "interval" : 5,
@@ -8,7 +8,7 @@
     "timeout" : 5,
     "maxReadInterval" : 300,
     "plugins" : {
-        "df" : {
+        "test_plguin" : {
             "hello" : "world"
         },
         "process" : {
