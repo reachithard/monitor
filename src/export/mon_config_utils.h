@@ -3,6 +3,10 @@
 
 #include "mon_config.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 bool MonConfigIsStr(const ConfigItem_t* config);
 
 bool MonConfigIsU64(const ConfigItem_t* config);
@@ -26,5 +30,9 @@ bool MonConfigGetF64(const ConfigItem_t* config, double* f64);
 bool MonConfigGetBool(const ConfigItem_t* config, bool* bo);
 
 char* MonConfigGetNull(const ConfigItem_t* config);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _MON_CONFIG_UTILS_H_

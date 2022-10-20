@@ -140,6 +140,13 @@ int32_t MonConfile::DispatchBaseConf(const ConfigItem_t* conf) {
 
 int32_t MonConfile::DispatchPluginConf(const ConfigItem_t* conf) {
   // 这里去加载动态库之类的
+  LOG_DEBUG("called DispatchPluginConf");
+  assert(conf != nullptr);
+
+  for (uint32_t idx = 0; idx < config->childCnt; idx++) {
+    ConfigItem_t* cur = &config->children[idx];
+    // 通过名字去加载动态库 然后调用回调
+  }
 }
 
 void MonConfile::InitDispatchMaps() {
@@ -160,7 +167,9 @@ void MonConfile::InitDispatchMaps() {
       std::bind(&MonConfile::DispatchBaseConf, this, std::placeholders::_1);
   confMaps["maxreadinterval"] =
       std::bind(&MonConfile::DispatchBaseConf, this, std::placeholders::_1);
-  confMaps["plugins"] = nullptr;
+  confMaps["plugins"] =
+      std::bind(&MonConfile::DispatchPluginConf, this, std::placeholders::_1);
+  ;
 }
 
 }  // namespace Monitor
