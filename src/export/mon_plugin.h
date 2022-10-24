@@ -23,7 +23,6 @@ typedef struct PluginUser_s {
 
 // TODO 增加更多回调
 typedef struct PluginCallbacks_s {
-  char* name;  // remeber free
   int32_t (*config)(const ConfigItem_t* cf);
   int32_t (*init)(PluginUser_s* cf);
   int32_t (*read)(PluginUser_s* cf);
@@ -32,7 +31,7 @@ typedef struct PluginCallbacks_s {
 } PluginCallbacks_t;
 
 // 插件主动调用这个接口 注册回调函数
-int32_t ModuleRegister(const PluginCallbacks_t* callback);
+int32_t ModuleRegister(const char* name, const PluginCallbacks_t* callback);
 
 // TODO 一个线程接口
 
