@@ -9,25 +9,13 @@
 extern "C" {
 #endif
 
-typedef struct PluginCtx_s {
-  char* name;  // remeber free
-  uint64_t interval;
-  uint64_t flushInterval;
-  uint64_t flushTimeout;
-} PluginCtx_t;
-
-typedef struct PluginUser_s {
-  void* data;
-  void (*gc)(void*);
-} PluginUser_t;
-
 // TODO 增加更多回调
 typedef struct PluginCallbacks_s {
   int32_t (*config)(const ConfigItem_t* cf);
-  int32_t (*init)(PluginUser_s* cf);
-  int32_t (*read)(PluginUser_s* cf);
-  int32_t (*write)(PluginUser_s* cf);     // 还需要有数据
-  int32_t (*shutdown)(PluginUser_s* cf);  // 还需要有数据
+  int32_t (*init)(void* data);
+  int32_t (*read)(void* data);
+  int32_t (*write)(void* data);     // 还需要有数据
+  int32_t (*shutdown)(void* data);  // 还需要有数据
 } PluginCallbacks_t;
 
 // 插件主动调用这个接口 注册回调函数

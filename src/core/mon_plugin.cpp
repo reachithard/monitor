@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <stdarg.h>
 
+#include "export/monitor_errors.h"
 #include "mon_module.h"
 #include "utils/logger.hpp"
 
@@ -39,4 +40,11 @@ void PluginLog(PlguinLogLevel level, const char* format, ...) {
 // 插件主动调用这个接口 注册回调函数 往MonModule里面注册进去 供他管理
 int32_t ModuleRegister(const char* name, const PluginCallbacks_t* callback) {
   LOG_DEBUG("register a module");
+  // 进行框架的调用，将回调函数注册进去
+  using namespace Monitor;
+  if (name == nullptr || callback == nullptr) {
+    return ERR_MODULE_PARAM;
+  }
+  std::string plugin = std::string(name);
+  return Singleton<MonModule>::Get().RegisterModule(plugin, callback);
 }

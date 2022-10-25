@@ -19,3 +19,6 @@
 [submodule "thirdparty/grpc"]
 	path = thirdparty/grpc
 	url = git@github.com:grpc/grpc.git
+[submodule "thirdparty/concurrentqueue"]
+	path = thirdparty/concurrentqueue
+	url = git@github.com:cameron314/concurrentqueue.git

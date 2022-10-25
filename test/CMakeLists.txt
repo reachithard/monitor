@@ -10,6 +10,7 @@ target_sources(monitor_tests
     "${BASE_DIR}/src/config/mon_config_test.cc"
     "${BASE_DIR}/src/config/mon_json_test.cc"
     "${BASE_DIR}/src/core/mon_confile_test.cc"
+    "${BASE_DIR}/src/core/mon_timer_test.cc"
     ${BASE_DIR}/src/core/mon_cache.cpp
     ${BASE_DIR}/src/core/mon_cache.h
     ${BASE_DIR}/src/core/mon_confile.cpp

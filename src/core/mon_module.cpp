@@ -69,6 +69,19 @@ error:
   return ret;
 }
 
+int32_t MonModule::DispatchConf(const std::string& plugin,
+                                const ConfigItem_t* item) {
+  int32_t ret = 0;
+  std::unordered_map<std::string, std::unique_ptr<ConfCallback_t>>::iterator
+      it = cfCallbacks.find(plugin);
+  if (it == cfCallbacks.end()) {
+    LOG_DEBUG("plugin:{} haven't conf", plugin);
+  } else {
+    ret = cfCallbacks[plugin]->callback(item);
+  }
+  return ret;
+}
+
 int32_t MonModule::LoadFile(const std::string& filename, bool global) {
   int32_t flag = RTLD_NOW;
   int32_t ret = 0;
@@ -94,6 +107,23 @@ int32_t MonModule::LoadFile(const std::string& filename, bool global) {
     handle();
   }
   dlclose(dl);
+  return ret;
+}
+
+int32_t MonModule::RegisterModule(const std::string& name,
+                                  const PluginCallbacks_t* callback) {
+  int32_t ret = 0;
+  if (callback->config != nullptr) {
+    std::unique_ptr<ConfCallback_t> ptr = std::make_unique<ConfCallback_t>();
+    ptr->callback = callback->config;
+    cfCallbacks.insert(std::make_pair(name, std::move(ptr)));
+  }
+
+  if (callback->init != nullptr) {
+    std::unique_ptr<InitCallback_t> ptr = std::make_unique<InitCallback_t>();
+    ptr->callback = callback->init;
+    initCallbacks.insert(std::make_pair(name, std::move(ptr)));
+  }
   return ret;
 }
 }  // namespace Monitor

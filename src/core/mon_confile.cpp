@@ -148,12 +148,19 @@ int32_t MonConfile::DispatchPluginConf(const ConfigItem_t* conf) {
     ConfigItem_t* cur = &conf->children[idx];
     // 通过名字去加载动态库 然后调用回调
     assert(cur != nullptr && cur->key != nullptr);
-    if (Singleton<MonModule>::Get().LoadPlugin(
-            globalConf.pluginDir, std::string(cur->key), false) != 0) {
+    std::string plugin = std::string(cur->key);
+    if (Singleton<MonModule>::Get().LoadPlugin(globalConf.pluginDir, plugin,
+                                               false) != 0) {
       ret = ERR_MODULE_LOAD;
       LOG_DEBUG("load plugin:{} failed", cur->key);
     } else {
       LOG_DEBUG("load plugin:{} success", cur->key);
+      // 进行配置文件的调用
+      int32_t temp = Singleton<MonModule>::Get().DispatchConf(plugin, conf);
+      if (temp != 0) {
+        ret = temp;
+        LOG_DEBUG("dispatch {} conf error:{}", plugin, temp);
+      }
     }
   }
   return ret;
