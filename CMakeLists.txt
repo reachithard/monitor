@@ -31,6 +31,8 @@ else(DOWNLOAD_THIRDPARTY)
     INCLUDE(cmake/utils/gtest.cmake)
     INCLUDE(cmake/utils/spdlog.cmake)
     INCLUDE(cmake/utils/yyjson.cmake)
+    INCLUDE(cmake/utils/concurrentqueue.cmake)
+    INCLUDE(cmake/utils/libuuid.cmake)
 
     set(MONITOR_MAJOR_VERSION 0)
     set(MONITOR_MINOR_VERSION 0)
