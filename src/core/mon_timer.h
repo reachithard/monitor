@@ -5,67 +5,102 @@
 #include <ctime>
 #include <functional>
 #include <iostream>
+#include <mutex>
+#include <thread>
 #include <vector>
 
 #include "asio.hpp"
 #include "asio/steady_timer.hpp"
+#include "mon_work.h"
+#include "utils/logger.hpp"
 #include "utils/singleton.h"
+#include "utils/uuid.h"
 
 namespace Monitor {
-// struct TimeClock {
-//   typedef std::chrono::steady_clock::duration duration;
+class TimerMeta {
+ public:
+  TimerMeta(bool iloop, asio::io_context& ictx, uint64_t ims)
+      : loop(iloop), timer(ictx), ms(ims) {}
 
-//   typedef duration::rep rep;
+  void Init() {
+    timer.expires_after(std::chrono::milliseconds(ms));
+    Uuid::Uuid_t uu;
+    Uuid::UuidGenerate(uu);
+    char uid[37] = {0};
+    Uuid::UuidUnparse(uu, uid);
+    uuid = std::string(uid);
+  }
 
-//   typedef duration::period period;
-
-//   typedef std::chrono::time_point<TimeClock> time_point;
-
-//   static constexpr bool isSeady = false;
-
-//   static time_point Now() noexcept {
-//     return time_point() + std::chrono::seconds(std::time(0));
-//   }
-// };
-
-// struct TimeWaitTraits {
-//   static TimeClock::duration WaitDuration(const TimeClock::duration& d) {
-//     if (d > std::chrono::seconds(1))
-//       return d - std::chrono::seconds(1);
-//     else if (d > std::chrono::seconds(0))
-//       return std::chrono::milliseconds(10);
-//     else
-//       return std::chrono::seconds(0);
-//   }
-
-//   // Determine how long until the clock should be next polled to determine
-//   // whether the absoluate time has been reached.
-//   static TimeClock::duration WaitDuration(const TimeClock::time_point& t) {
-//     return WaitDuration(t - TimeClock::Now());
-//   }
-// };
-
-// typedef asio::basic_waitable_timer<TimeClock, TimeWaitTraits> timer;
-
-struct TimerMeta {};
+  std::function<void(const std::error_code&)> func;
+  std::string uuid;
+  bool loop;
+  asio::steady_timer timer;
+  uint64_t ms;
+};
 
 class MonTimer {
  public:
-  MonTimer() : ctx(1), work(asio::make_work_guard(ctx)) {}
-  ~MonTimer() {}
-  void AddTimer(std::function<void(const std::error_code&)> func, uint64_t ms) {
-    asio::steady_timer timer(ctx);
-    timer.expires_after(std::chrono::milliseconds(ms));
-    timer.async_wait(func);
-    timers.push_back(std::move(timer));
+  MonTimer() {}
+  ~MonTimer() { Stop(); }
+
+  // TODO 注意生命周期之类
+  const std::string& AddTimer(std::function<void(const std::error_code&)> func,
+                              uint64_t ms, bool loop = false) {
+    std::unique_ptr<TimerMeta> meta =
+        std::make_unique<TimerMeta>(loop, worker.GetContext(), ms);
+    meta->Init();
+    meta->func = func;
+    const std::string& uu = meta->uuid;
+    meta->timer.expires_after(std::chrono::milliseconds(ms));
+    meta->timer.async_wait(
+        std::bind(&MonTimer::TimeOut, this, std::placeholders::_1, uu));
+    std::lock_guard<std::mutex> lk(lock);
+    timers.insert(std::make_pair(uu, std::move(meta)));
+    return uu;
   }
 
-  void Run() { ctx.run(); }
+  void Run() { worker.Run(); }
+
+  void Stop() {
+    std::lock_guard<std::mutex> lk(lock);
+    timers.clear();
+    worker.Stop();
+  }
+
+  void ClearTimer(const std::string& uu) {
+    std::lock_guard<std::mutex> lk(lock);
+    auto it = timers.find(uu);
+    if (it == timers.end()) {
+      LOG_ERROR("can't find key:{}", uu);
+    } else {
+      it->second->timer.cancel();
+      timers.erase(it);
+    }
+  }
+
+ protected:
+  void TimeOut(const std::error_code& error, const std::string& uu) {
+    std::lock_guard<std::mutex> lk(lock);
+    auto it = timers.find(uu);
+    if (it == timers.end()) {
+      LOG_ERROR("can't find key:{}", uu);
+    } else {
+      it->second->func(error);
+      if (it->second->loop) {
+        it->second->timer.expires_after(
+            std::chrono::milliseconds(it->second->ms));
+        it->second->timer.async_wait(
+            std::bind(&MonTimer::TimeOut, this, std::placeholders::_1, uu));
+      } else {
+        timers.erase(it);
+      }
+    }
+  }
 
  private:
-  asio::io_context ctx;
-  std::vector<asio::steady_timer> timers;
-  asio::executor_work_guard<asio::io_context::executor_type> work;
+  std::mutex lock;
+  std::unordered_map<std::string, std::unique_ptr<TimerMeta>> timers;
+  MonWork worker;
 };
 }  // namespace Monitor
 #endif  // _MON_TIMER_H_

@@ -28,6 +28,8 @@ target_sources(mcore PRIVATE
                 ./core/mon_process.h
                 ./core/mon_timer.cpp
                 ./core/mon_timer.h
+                ./core/mon_work.cpp
+                ./core/mon_work.h
 )
 target_link_libraries(mcore PRIVATE intf mconfig dl)
 target_link_options(mcore PRIVATE "-Wl,--export-dynamic")

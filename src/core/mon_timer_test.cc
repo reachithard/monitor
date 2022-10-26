@@ -11,7 +11,11 @@ TEST(MonTimerTest, addTimer) {
   LOG_DEBUG("time start");
   std::unique_ptr<Monitor::MonTimer> ptr =
       std::make_unique<Monitor::MonTimer>();
-  ptr->AddTimer([](const std::error_code&) { LOG_DEBUG("time out"); }, 5000);
+  ptr->AddTimer([](const std::error_code&) { LOG_DEBUG("time out"); }, 5000,
+                true);
   ptr->Run();
+  while (true) {
+    sleep(1);
+  }
 }
 }  // namespace Monitor
