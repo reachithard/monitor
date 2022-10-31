@@ -11,21 +11,18 @@ target_sources(mconfig PRIVATE
 target_link_libraries(mconfig PRIVATE intf)
 yyjson_deps(mconfig)
 
-add_library(mcore ./core/mon_process.cpp)
+add_library(mcore ./core/mon_core.cpp)
 target_sources(mcore PRIVATE  
                 ./core/mon_cache.cpp
                 ./core/mon_cache.h
                 ./core/mon_confile.cpp
                 ./core/mon_confile.h
-                ./core/monitor_cxx.cpp
-                ./core/monitor_cxx.h
+                ./core/mon_core.h
                 ./core/mon_module.cpp
                 ./core/mon_module.h
                 ./core/mon_parse.cpp
                 ./core/mon_parse.h
                 ./core/mon_plugin.cpp
-                ./core/mon_process.cpp
-                ./core/mon_process.h
                 ./core/mon_timer.cpp
                 ./core/mon_timer.h
                 ./core/mon_work.cpp

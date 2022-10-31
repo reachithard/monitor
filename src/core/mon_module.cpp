@@ -110,9 +110,30 @@ int32_t MonModule::LoadFile(const std::string& filename, bool global) {
   return ret;
 }
 
+int32_t MonModule::TriggerInit() {
+  // TODO 加上锁
+  int32_t ret = 0;
+  for (std::unordered_map<std::string,
+                          std::unique_ptr<InitCallback_t>>::iterator it =
+           initCallbacks.begin();
+       it != initCallbacks.end(); it++) {
+    if (it->second->callback != nullptr) {
+      int32_t temp = it->second->callback(nullptr);
+      if (temp != 0) {
+        ret = temp;
+        LOG_ERROR("{}'s callback error:{}", it->first, temp);
+      }
+    } else {
+      LOG_ERROR("can't find {}'s callback", it->first);
+    }
+  }
+  return ret;
+}
+
 int32_t MonModule::RegisterModule(const std::string& name,
                                   const PluginCallbacks_t* callback) {
   int32_t ret = 0;
+  // TODO 加锁
   if (callback->config != nullptr) {
     std::unique_ptr<ConfCallback_t> ptr = std::make_unique<ConfCallback_t>();
     ptr->callback = callback->config;
@@ -123,6 +144,25 @@ int32_t MonModule::RegisterModule(const std::string& name,
     std::unique_ptr<InitCallback_t> ptr = std::make_unique<InitCallback_t>();
     ptr->callback = callback->init;
     initCallbacks.insert(std::make_pair(name, std::move(ptr)));
+  }
+
+  if (callback->init != nullptr) {
+    std::unique_ptr<ReadCallback_t> ptr = std::make_unique<ReadCallback_t>();
+    ptr->callback = callback->read;
+    readCallbacks.insert(std::make_pair(name, std::move(ptr)));
+  }
+
+  if (callback->write != nullptr) {
+    std::unique_ptr<WriteCallback_t> ptr = std::make_unique<WriteCallback_t>();
+    ptr->callback = callback->write;
+    writeCallbacks.insert(std::make_pair(name, std::move(ptr)));
+  }
+
+  if (callback->init != nullptr) {
+    std::unique_ptr<ShutdownCallback_t> ptr =
+        std::make_unique<ShutdownCallback_t>();
+    ptr->callback = callback->shutdown;
+    shutdownCallbacks.insert(std::make_pair(name, std::move(ptr)));
   }
   return ret;
 }

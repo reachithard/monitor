@@ -28,6 +28,21 @@ typedef struct InitCallback_s {
   std::function<int32_t(void*)> callback;
 } InitCallback_t;
 
+typedef struct ReadCallback_s {
+  PluginCtx_t ctx;
+  std::function<int32_t(void*)> callback;
+} ReadCallback_t;
+
+typedef struct WriteCallback_s {
+  PluginCtx_t ctx;
+  std::function<int32_t(void*)> callback;
+} WriteCallback_t;
+
+typedef struct ShutdownCallback_s {
+  PluginCtx_t ctx;
+  std::function<int32_t(void*)> callback;
+} ShutdownCallback_t;
+
 class MonModule : public Singleton<MonModule> {
  public:
   int32_t LoadPlugin(const std::string& dir, const std::string& module,
@@ -40,12 +55,20 @@ class MonModule : public Singleton<MonModule> {
 
   int32_t DispatchConf(const std::string& plugin, const ConfigItem_t* item);
 
+  int32_t TriggerInit();
+
  private:
   int32_t LoadFile(const std::string& filename, bool global);
 
   std::unordered_map<std::string, std::unique_ptr<ConfCallback_t>> cfCallbacks;
   std::unordered_map<std::string, std::unique_ptr<InitCallback_t>>
       initCallbacks;
+  std::unordered_map<std::string, std::unique_ptr<ReadCallback_t>>
+      readCallbacks;
+  std::unordered_map<std::string, std::unique_ptr<WriteCallback_t>>
+      writeCallbacks;
+  std::unordered_map<std::string, std::unique_ptr<ShutdownCallback_t>>
+      shutdownCallbacks;
 };
 }  // namespace Monitor
 #endif  // _MON_MODULE_H_

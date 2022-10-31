@@ -31,6 +31,8 @@ class MonConfile : Singleton<MonConfile> {
 
   int32_t Init(const std::string& file);
 
+  const MonGlobalConf_t& GetGlobalConf() const { return globalConf; }
+
  protected:
   int32_t DispatchConf(const ConfigItem_t* conf);
 
