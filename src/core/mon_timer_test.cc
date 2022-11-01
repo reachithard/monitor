@@ -16,7 +16,7 @@ TEST(MonTimerTest, addTimer) {
         LOG_DEBUG("time out");
         sleep(4);  // 定时任务里面不能有太耗时的任务 否则应该提交到子线程
       },
-      5000, true);
+      5000, false);
 
   std::string timer1 = ptr->AddTimer(
       [](const std::error_code&) { LOG_DEBUG("time1 out"); }, 1000, true);
@@ -27,6 +27,8 @@ TEST(MonTimerTest, addTimer) {
     i++;
     if (i == 20) {
       ptr->ClearTimer(timer1);
+      ptr->Stop();
+      break;
     }
   }
 }
