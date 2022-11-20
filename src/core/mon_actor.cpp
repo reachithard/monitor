@@ -8,10 +8,16 @@ MonActor::MonActor(MonCore* icore, uint32_t actorId)
 
 MonActor::~MonActor() {}
 
-void MonActor::Send(std::unique_ptr<MonMessage> msg) {
+void MonActor::Dispatch(std::unique_ptr<MonMessage> msg) {
   mq.enqueue(std::move(msg));
-  asio::post(work->GetContext(), []() {
-
+  asio::post(work->GetContext(), [this]() {
+    // 这里从环形队列里面找一个 然后去触发回调
+    std::unique_ptr<MonMessage> tmp;
+    bool success = mq.try_dequeue(tmp);
+    if (success) {
+      // 出队列成功
+      HandleMessage(this, std::move(tmp));
+    }
   });
 }
 

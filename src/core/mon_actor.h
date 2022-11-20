@@ -18,7 +18,7 @@ class MonActor : public Nocopy {
 
   uint32_t GetId() const { return id; }
 
-  void Send(std::unique_ptr<MonMessage> msg);
+  void Dispatch(std::unique_ptr<MonMessage> msg);
 
   void Init();
 
@@ -33,7 +33,14 @@ class MonActor : public Nocopy {
   std::unique_ptr<MonWork> work;
   MonCore* core;
   uint32_t id;
+
+  // TODO 在这里面存模块信息 插件等
 };
+
+template <typename Actor, typename Message>
+inline void HandleMessage(Actor&& s, std::unique_ptr<Message> m) {
+  // 这里去调用插件的回调函数
+}
 }  // namespace Monitor
 
 #endif  // _MON_ACTOR_H_

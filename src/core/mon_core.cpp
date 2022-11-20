@@ -60,4 +60,6 @@ int32_t MonCore::Update() {
   }
   return ret;
 }
+
+void MonCore::Dispatch(std::unique_ptr<MonMessage> msg) {}
 }  // namespace Monitor
